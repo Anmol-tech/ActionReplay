@@ -1,7 +1,9 @@
-# Genuine discovery evidence is still required
+# Genuine discovery evidence
 
-The accompanying run directories were produced with real Chromium and explicitly labeled offline model/fixture inputs. The handoff example uses a simulated local operator.
+The live OpenRouter discovery requirement is satisfied by:
 
-No OpenRouter API key or model was configured in the implementation environment. These files do not claim to satisfy the assignment's genuine-discovery requirement.
+- [7ad50bfbfbc443c49874a1e0bb7e76e2](7ad50bfbfbc443c49874a1e0bb7e76e2/manifest.json) — discovery, `provenance: live`, model `qwen/qwen3-vl-235b-a22b-instruct`, result `OK`
+- [755f7eba08044d5788225e703fca8337](755f7eba08044d5788225e703fca8337/manifest.json) — replay of the saved capability with alternate member inputs, result `OK`
+- [1a3caae3010a429c9082ca2a6509141f](1a3caae3010a429c9082ca2a6509141f/manifest.json) — replay business outcome `MEMBER_NOT_FOUND`
 
-Follow the root README to configure the server, run `discover`, replay the newly generated capability with alternate inputs, and use `export-evidence` on those completed run IDs. Retain live provenance and review the export before publication.
+Offline scripted-model runs remain in this directory for handoff/transient demonstrations. They are labeled as such and are not substitutes for the live discovery run above.

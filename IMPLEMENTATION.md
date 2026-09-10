@@ -7,7 +7,7 @@ This preserves the agreed scope and distinguishes implementation from live verif
 | Python stack and reproducible setup | pyproject.toml, uv.lock, package CLI; installation and process-level smoke test pass. |
 | Local legacy app | Nested frames, tables, unlabeled select, synthetic member/account/form screens; both workflows traversed in Chromium. |
 | No business API discovery | Screenshots/rendered controls and fixed browser tools only; hidden-content exclusion test. No production task scripts. |
-| Real model discovery | OpenRouter image/tool preflight and validated tool-call adapter; protocol tested with mocked HTTP. **Genuine provider run pending credentials.** |
+| Real model discovery | OpenRouter image/tool preflight and validated tool-call adapter; protocol tested with mocked HTTP. **Genuine provider discovery exported under `/evidence/` (live provenance).** |
 | Generic discovery loop | Fresh observations, action validation, runtime outcomes, no-progress detection; offline model doubles exercise two live UI workflows. |
 | Configurable 30-step default | Config and CLI step/time overrides; precedence, invalid values, rejected-decision accounting, and explicit extensions tested. |
 | Typed replay schema | Pydantic discriminated union and exported JSON Schema; round-trip, version/action/field, reference, ordering, and contract validation. |
@@ -21,7 +21,7 @@ This preserves the agreed scope and distinguishes implementation from live verif
 | Same-session takeover | Single-owner PAUSED/HUMAN state machine; context/tab/cookie continuity and automation exclusion verified. |
 | Resume validation | Pre/postconditions, live browser, valid routes, no unresolved dialogs/popups; invalid resume stays paused, stale requests rejected. |
 | Human action evidence | Redacted UI events/navigation/ownership; simulated operator events captured on the same session. |
-| Operator and discovery interface | Loopback token-protected discovery form and handoff controls; auth/origin tests, exact discovery payload test, CLI/server/browser smoke test, visual QA. |
+| Operator and discovery interface | Loopback-origin-protected discovery form and handoff controls; origin tests, exact discovery payload test, CLI/server/browser smoke test, visual QA. |
 | Observability | Validated JSONL, manifests, results, sanitized snapshots; sequences and hashes verified. |
 | Sensitive data | Known-value/secret redaction, approved snapshot vocabulary, transient screenshots, redacted persisted outputs; canary tests. |
 | Persistence failures | Evidence-write failure stops actions; incomplete manifests remain incomplete; fault-injection test. |
@@ -32,9 +32,7 @@ This preserves the agreed scope and distinguishes implementation from live verif
 
 ## Evidence provenance
 
-Five exported examples demonstrate real browser machinery: offline recording, alternate-input replay, not-found outcome, same-session handoff, and transient recovery. Every manifest and the index identify offline model/fixture provenance. Human takeover in these examples is simulated by the test harness and logged as such.
-
-These files do **not** satisfy the genuine LLM-discovery requirement. Configure OpenRouter on the server, run the README discovery command, replay its artifact with alternate inputs, and export those run IDs. Production discovery never silently falls back to a test double.
+Live OpenRouter discovery, alternate-input replay, and a not-found business outcome are exported under `/evidence/` with `provenance: live`. Additional offline examples demonstrate recording, same-session handoff, and transient recovery; every offline manifest and the index identify offline model/fixture provenance. Human takeover in offline examples is simulated by the test harness and logged as such.
 
 ## Deliberate limits retained from the plan
 

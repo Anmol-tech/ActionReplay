@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import hmac
 import logging
 import os
-import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
@@ -173,9 +171,8 @@ class Coordinator:
 OPERATOR_HTML = Path(__file__).with_name("operator.html").read_text()
 
 
-def create_app(config: Config, token: str | None = None):
+def create_app(config: Config):
     coordinator = Coordinator(config)
-    token = token or secrets.token_urlsafe(32)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -184,7 +181,6 @@ def create_app(config: Config, token: str | None = None):
 
     app = FastAPI(lifespan=lifespan)
     app.state.coordinator = coordinator
-    app.state.token = token
 
     @app.middleware("http")
     async def protect(request: Request, call_next):
@@ -195,10 +191,6 @@ def create_app(config: Config, token: str | None = None):
         expected = "http://" + request.headers.get("host", "")
         if host not in {"127.0.0.1", "localhost", "testserver"} or (origin and origin != expected):
             return JSONResponse({"detail": "Untrusted origin"}, status_code=403)
-        if request.url.path != "/" and not hmac.compare_digest(
-            request.headers.get("x-actionreplay-token", ""), token
-        ):
-            return JSONResponse({"detail": "Local token required"}, status_code=403)
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -273,9 +265,3 @@ def create_app(config: Config, token: str | None = None):
         return c.state()
 
     return app
-
-
-def write_token(path: Path, token: str):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(token)
-    path.chmod(0o600)

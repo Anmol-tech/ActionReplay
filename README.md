@@ -4,7 +4,7 @@ Discover a UI workflow with an LLM, save a typed capability, and replay it witho
 
 Python 3.11+, Playwright, Pydantic, FastAPI, OpenRouter. No target business APIs, hidden application state, task-specific discovery scripts, or generated executable code.
 
-**Evidence status:** the checked-in demonstrations use a clearly labeled offline model double with a real browser. Genuine OpenRouter discovery has not been run because this workspace has no configured API key/model. Completing that run is required before submitting this assignment. The offline double is only in tests and the evidence-building script; production discovery always calls OpenRouter.
+**Evidence status:** `/evidence/` includes a genuine OpenRouter discovery run (`provenance: live`) plus deterministic replay with alternate inputs and a `MEMBER_NOT_FOUND` outcome. Offline scripted-model demos remain for handoff/transient paths. Production discovery always calls OpenRouter; test doubles are confined to tests and the offline evidence builder.
 
 ## Setup
 
@@ -28,7 +28,7 @@ Alternatively, populate a local ignored `.env` from `.env.example`, then load it
 
 OpenRouter discovery preflights `/models` for image input and tool-calling support. It validates every returned action with Pydantic, requires provider parameter support, and requests providers that disallow data collection. An unavailable compatible provider produces a bounded failure/intervention. There is no silent substitute model.
 
-The mock listens on `127.0.0.1:8000`; the coordinator/operator page uses `127.0.0.1:8001`. `serve` prints the operator URL with a local token in the URL fragment. Open that complete URL. The token is also stored with mode 0600 in ignored `.actionreplay/token`; the CLI reads it automatically. Browser outputs remain in process memory and token-authenticated responses only.
+The mock listens on `127.0.0.1:8000`; the coordinator/operator page uses `127.0.0.1:8001`. `serve` prints the local operator URL. The coordinator accepts requests only from loopback hosts and the operator page's own origin; it does not use a URL token. Browser outputs remain in process memory and local-origin responses only.
 
 ### Start discovery from the UI
 

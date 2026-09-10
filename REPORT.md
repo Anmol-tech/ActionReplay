@@ -1,10 +1,10 @@
 # Architecture
 
-ActionReplay separates probabilistic discovery from deterministic execution. A Python coordinator owns one Chromium context and a small token-authenticated local operator service; the CLI submits work and polls results. A separate FastAPI application supplies a synthetic legacy banking surface with nested frames and tables. A single-process coordinator avoids distributed locks and queues while making browser ownership explicit.
+ActionReplay separates probabilistic discovery from deterministic execution. A Python coordinator owns one Chromium context and a loopback-only local operator service; the CLI submits work and polls results. A separate FastAPI application supplies a synthetic legacy banking surface with nested frames and tables. A single-process coordinator avoids distributed locks and queues while making browser ownership explicit. The operator API accepts requests only from loopback hosts and the operator page origin; it does not use a shared URL token.
 
 Discovery sends screenshots and rendered control descriptions to OpenRouter. It exposes a finite set of UI actions, not application business APIs, source code, network response bodies, hidden inputs, or arbitrary code execution. Observation references are temporary. The recorder resolves them into durable targeting descriptions and records successfully executed actions, parameter bindings, and verified checkpoints. Page text is untrusted data. A separate replay module imports no model client.
 
-The implementation includes a real OpenRouter adapter, but no genuine model run was possible in the implementation environment because credentials were absent. Checked-in evidence uses an explicitly labeled scripted model double with a real browser. This is a submission prerequisite still to complete, not evidence of genuine discovery.
+A genuine OpenRouter discovery run against the live mock UI is checked in under `/evidence/` (provenance `live`), along with alternate-input replay and a `MEMBER_NOT_FOUND` business-outcome replay. Offline scripted-model evidence remains for handoff/transient demos that do not require a provider call.
 
 # Artifact schema
 
@@ -38,7 +38,7 @@ The operator resolves the issue in that browser and selects Resume. Automation c
 
 Trusted runtime policy checks origins/routes, action types, control identities, and approved artifact constants. Network routing also blocks off-policy browser requests, including frames/popups. Reads and reversible preparation are permitted; automated final account creation is blocked. Model-supplied intent or artifact claims cannot grant permission. The mock contains synthetic data only.
 
-One evidence writer validates/sanitizes durable events, flushes them, and atomically writes complete JSON documents. Failure snapshots contain structural controls and approved status text, not arbitrary page content. Raw screenshots remain transient; transcripts, traces, HTML dumps, browser storage, secrets, and financial outputs are not persisted. Actual outputs return only through the authenticated caller path. Evidence failure stops automation; a crash remains visibly incomplete. Export scanning and explicit retention cleanup provide additional safeguards.
+One evidence writer validates/sanitizes durable events, flushes them, and atomically writes complete JSON documents. Failure snapshots contain structural controls and approved status text, not arbitrary page content. Raw screenshots remain transient; transcripts, traces, HTML dumps, browser storage, secrets, and financial outputs are not persisted. Actual outputs return only through the local caller path. Evidence failure stops automation; a crash remains visibly incomplete. Export scanning and explicit retention cleanup provide additional safeguards.
 
 Limits: screenshots sent to the model can contain visible data, so the current workflow must stay synthetic. Allowlisted control names require trusted application configuration; labels alone cannot prove semantic safety on an adversarial application. The instrumentation records browser UI events, not every OS-level action. Redaction combines known sensitive values and approved structural vocabulary; it is not a production universal PII detector. The loopback console is not a remote multi-user security product.
 
@@ -46,4 +46,4 @@ Limits: screenshots sent to the model can contain visible data, so the current w
 
 Deferred: remote streaming, desktop/visual implementations, distributed workers, tenant plumbing, polished UI, automatic artifact repair, model-assisted replay fallback, and production identity/PII systems. No public repository publication or submission email has been performed.
 
-Next steps are genuine OpenRouter discovery and exported evidence, then repeated replay evaluation and one reviewed application variant. Only after those pass would confidence/approval promotion and a callable capability catalog be worth adding. The current priority is a complete, testable local execution/control/evidence seam rather than optional infrastructure.
+Next steps are repeated multi-run stability evaluation and one reviewed application variant. Only after those pass would confidence/approval promotion and a callable capability catalog be worth adding. The current priority remains a complete, testable local execution/control/evidence seam rather than optional infrastructure.

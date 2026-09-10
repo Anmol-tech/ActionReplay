@@ -2,7 +2,6 @@ import argparse
 import json
 import logging
 import os
-import secrets
 import subprocess
 import sys
 import time
@@ -22,7 +21,6 @@ def parser():
     p = argparse.ArgumentParser(prog="actionreplay")
     p.add_argument("--config")
     p.add_argument("--coordinator", default="http://127.0.0.1:8001")
-    p.add_argument("--token-file", default=".actionreplay/token")
     p.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
@@ -69,7 +67,7 @@ def main():
         if args.command == "serve":
             from urllib.parse import urlsplit
 
-            from .server import create_app, write_token
+            from .server import create_app
 
             if args.headless is not None:
                 config.headless = args.headless
@@ -79,8 +77,6 @@ def main():
             coord_url = urlsplit(args.coordinator)
             if mock_url.hostname != "127.0.0.1" or coord_url.hostname != "127.0.0.1":
                 raise ValueError("Serve binds to loopback only")
-            token = secrets.token_urlsafe(32)
-            write_token(Path(args.token_file), token)
             LOGGER.info(
                 "services_starting mock_url=%s coordinator_url=%s model=%s headless=%s scenario=%s",
                 config.policy.base_url,
@@ -104,10 +100,10 @@ def main():
                 ],
                 env=env,
             )
-            print(f"Operator: {args.coordinator}/#{token}", file=sys.stderr)
+            print(f"Operator: {args.coordinator}", file=sys.stderr)
             try:
                 uvicorn.run(
-                    create_app(config, token),
+                    create_app(config),
                     host="127.0.0.1",
                     port=coord_url.port or 8001,
                     access_log=False,
@@ -116,7 +112,6 @@ def main():
             finally:
                 child.terminate()
                 child.wait(timeout=10)
-                Path(args.token_file).unlink(missing_ok=True)
             return
         if args.command == "schema":
             path = Path(args.output)
@@ -148,10 +143,7 @@ def main():
             payload["artifact"] = Capability.model_validate_json(Path(args.artifact).read_text()).model_dump(
                 mode="json"
             )
-        token = Path(args.token_file).read_text().strip()
-        with httpx.Client(
-            base_url=args.coordinator, headers={"X-ActionReplay-Token": token}, timeout=15
-        ) as client:
+        with httpx.Client(base_url=args.coordinator, timeout=15) as client:
             response = client.post("/runs", json=payload)
             response.raise_for_status()
             run_id = response.json()["run_id"]

@@ -1,11 +1,20 @@
 """Offline protocol tests. These exercise the live UI but do not claim a genuine LLM run."""
 
 import asyncio
+import json
 
 import pytest
 
 from actionreplay.config import Config
-from actionreplay.discovery import Decision, DiscoveryEngine, Recorder, rejection_guidance
+from actionreplay.discovery import (
+    FINISH_EXAMPLE,
+    Decision,
+    DiscoveryEngine,
+    Recorder,
+    coerce_decision_arguments,
+    completion_hint,
+    rejection_guidance,
+)
 from actionreplay.models import Binding, Click, Condition, Contract, Extract, Fill
 from actionreplay.policy import AutomationError
 from actionreplay.replay import ReplayEngine
@@ -109,6 +118,59 @@ def test_unparameterized_value_is_rejected_without_terminal_output(capsys):
     assert captured.out == ""
     assert captured.err == ""
     assert "literal URLs" in rejection_guidance("UNPARAMETERIZED_VALUE")
+
+
+def test_finish_completion_hint_after_extract():
+    hint = completion_hint(
+        [
+            {
+                "action": "extract",
+                "result": "completed",
+                "extracted_variables": ["balance"],
+                "last_extract": {"variable": "balance", "conversion": "currency"},
+            }
+        ]
+    )
+    assert '"kind":"finish"' in hint
+    assert '"variable":"balance"' in hint
+    assert '"type":"decimal"' in hint
+    guidance = rejection_guidance("MODEL_DECISION_SCHEMA_INVALID")
+    assert FINISH_EXAMPLE in guidance
+
+    coerced = json.loads(
+        coerce_decision_arguments(
+            {
+                "kind": "done",
+                "action": "finish",
+                "step": {"id": "x", "action": "click", "target": "e1"},
+                "outputs": {"balance": "balance"},
+                "success": {"kind": "visible", "target": 1},
+            },
+            {"member_id": "00123"},
+        )
+    )
+    assert coerced["kind"] == "finish"
+    assert coerced["step"] is None
+    assert "action" not in coerced
+    assert coerced["outputs"]["balance"]["variable"] == "balance"
+    assert coerced["success"][0]["target"] == "e1"
+    Decision.model_validate(coerced)
+
+    fill = json.loads(
+        coerce_decision_arguments(
+            {
+                "kind": "action",
+                "step": {
+                    "id": "fill",
+                    "action": "fill",
+                    "target": "e2",
+                    "value": {"kind": "input", "name": "member_id", "value": "00123"},
+                },
+            },
+            {"member_id": "00123"},
+        )
+    )
+    assert fill["step"]["value"] == {"kind": "input", "name": "member_id"}
 
 
 @pytest.mark.parametrize("review", [False, True])

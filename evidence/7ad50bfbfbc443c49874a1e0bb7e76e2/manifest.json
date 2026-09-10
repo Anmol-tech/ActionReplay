@@ -1,0 +1,127 @@
+{
+  "run_id": "7ad50bfbfbc443c49874a1e0bb7e76e2",
+  "mode": "discovery",
+  "started_at": "2026-09-10T20:38:51.811026+00:00",
+  "state": "finished",
+  "software_version": "0.1.0",
+  "schema_version": "1.0",
+  "provenance": "live",
+  "configuration": {
+    "discovery": {
+      "max_steps": 40,
+      "max_duration_seconds": 300,
+      "max_consecutive_no_progress": 3
+    },
+    "execution": {
+      "action_timeout_seconds": 10.0,
+      "max_recovery_attempts": 2
+    },
+    "handoff": {
+      "timeout_seconds": 900.0
+    },
+    "evidence": {
+      "directory": "runs",
+      "retention_days": 7
+    },
+    "policy": {
+      "base_url": "http://127.0.0.1:8000",
+      "allowed_routes": [
+        "/",
+        "/shell",
+        "/workspace",
+        "/search",
+        "/member",
+        "/account",
+        "/new",
+        "/review",
+        "/restore",
+        "/continue"
+      ],
+      "allowed_actions": [
+        "navigate",
+        "click",
+        "fill",
+        "select",
+        "press",
+        "scroll",
+        "wait_for",
+        "assert",
+        "extract"
+      ],
+      "safe_click_labels": [
+        "Search",
+        "Open member",
+        "Savings",
+        "Checking",
+        "Prepare sub-account",
+        "Review",
+        "Back",
+        "Continue"
+      ],
+      "safe_field_names": [
+        "Member ID",
+        "Account type",
+        "Nickname",
+        "member_id",
+        "account_type",
+        "nickname"
+      ],
+      "approved_literals": [
+        "Savings",
+        "Checking",
+        "Member ID",
+        "Account type",
+        "Nickname",
+        "Search",
+        "Open member",
+        "Prepare sub-account",
+        "Review",
+        "Back",
+        "Continue",
+        "Savings balance",
+        "Checking balance",
+        "Amount",
+        "Member details",
+        "Sub-account review",
+        "Account type:",
+        "Nickname:",
+        "Member servicing",
+        "Search results"
+      ],
+      "approved_attributes": {
+        "name": [
+          "shell",
+          "workspace",
+          "member_id",
+          "account_type",
+          "nickname"
+        ],
+        "title": [
+          "Bank shell",
+          "Workspace"
+        ],
+        "id": [
+          "member",
+          "nickname"
+        ],
+        "placeholder": []
+      }
+    },
+    "application_family": "legacy-bank",
+    "application_version": "1.0",
+    "startup_text": "LegacyBank 1.0 — Staff workspace",
+    "headless": true,
+    "scenario": "normal"
+  },
+  "model": "qwen/qwen3-vl-235b-a22b-instruct",
+  "goal_template": "User goal supplied in memory; invocation parameters referenced by name",
+  "input_names": [
+    "member_id"
+  ],
+  "capability_id": "savings-balance",
+  "revision": 1,
+  "capability_hash": "ee467adcb1ab800bebfda484973c445c91e351fd255399e95717826f433a7ec9",
+  "source_run_id": "7ad50bfbfbc443c49874a1e0bb7e76e2",
+  "finished_at": "2026-09-10T20:39:07.313239+00:00",
+  "status": "success"
+}

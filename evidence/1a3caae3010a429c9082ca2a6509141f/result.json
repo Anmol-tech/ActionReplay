@@ -1,0 +1,13 @@
+{
+  "status": "business_outcome",
+  "code": "MEMBER_NOT_FOUND",
+  "run_id": "1a3caae3010a429c9082ca2a6509141f",
+  "outputs": {},
+  "step_id": "step_2",
+  "expected": null,
+  "observed": null,
+  "evidence": [
+    "snapshots/000013.json"
+  ],
+  "outputs_validated": false
+}

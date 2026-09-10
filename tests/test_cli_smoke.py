@@ -27,7 +27,6 @@ async def test_cli_operator_smoke(tmp_path):
     config.write_text(
         f"policy:\n  base_url: http://127.0.0.1:{mock_port}\nevidence:\n  directory: {tmp_path / 'runs'}\n"
     )
-    token_file = tmp_path / "token"
     url = f"http://127.0.0.1:{coordinator_port}"
     command = [
         sys.executable,
@@ -37,8 +36,6 @@ async def test_cli_operator_smoke(tmp_path):
         str(config),
         "--coordinator",
         url,
-        "--token-file",
-        str(token_file),
     ]
     server_log = tmp_path / "server.log"
     server_log_stream = server_log.open("w")
@@ -56,7 +53,7 @@ async def test_cli_operator_smoke(tmp_path):
         async with httpx.AsyncClient() as client:
             for _ in range(200):
                 try:
-                    if token_file.exists() and (await client.get(url + "/")).status_code == 200:
+                    if (await client.get(url + "/")).status_code == 200:
                         break
                 except httpx.HTTPError:
                     pass
@@ -77,15 +74,13 @@ async def test_cli_operator_smoke(tmp_path):
             assert child.returncode == 0, stderr.decode()
             result = json.loads(stdout)
             assert result["outputs"] == {"balance": "9876.54"}
-            token = token_file.read_text().strip()
-            state = (await client.get(url + "/state", headers={"X-ActionReplay-Token": token})).json()
+            state = (await client.get(url + "/state")).json()
             assert state["result"]["outputs"] == {"balance": "[REDACTED]"}
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch()
                 page = await browser.new_page(viewport={"width": 1200, "height": 1100})
-                await page.goto(url + "/#" + token)
+                await page.goto(url)
                 await page.get_by_role("heading", name="FINISHED", exact=True).wait_for()
-                assert "#" not in page.url
                 assert await page.get_by_role("heading", name="New discovery").is_visible()
                 assert await page.get_by_label("Goal").input_value() == (
                     "Find the savings balance for the supplied member"

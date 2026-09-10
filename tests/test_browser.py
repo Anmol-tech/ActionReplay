@@ -135,7 +135,7 @@ async def test_api_auth_and_transitions(tmp_path, monkeypatch):
 
     monkeypatch.setenv("OPENROUTER_API_KEY", "synthetic-test-key")
     monkeypatch.setenv("OPENROUTER_MODEL", "qwen/test-model")
-    app = create_app(Config(), "token")
+    app = create_app(Config())
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://testserver"
     ) as client:
@@ -143,9 +143,8 @@ async def test_api_auth_and_transitions(tmp_path, monkeypatch):
         assert page.status_code == 200
         assert "New discovery" in page.text
         assert "synthetic-test-key" not in page.text
-        assert (await client.get("/state")).status_code == 403
-        assert (await client.get("/state", headers={"X-ActionReplay-Token": "token"})).status_code == 200
-        settings = await client.get("/settings", headers={"X-ActionReplay-Token": "token"})
+        assert (await client.get("/state")).status_code == 200
+        settings = await client.get("/settings")
         assert settings.json() == {
             "target": "http://127.0.0.1:8000",
             "max_steps": 30,
@@ -156,6 +155,6 @@ async def test_api_auth_and_transitions(tmp_path, monkeypatch):
         assert "synthetic-test-key" not in settings.text
         assert (
             await client.get(
-                "/state", headers={"X-ActionReplay-Token": "token", "Origin": "https://evil.example"}
+                "/state", headers={"Origin": "https://evil.example"}
             )
         ).status_code == 403

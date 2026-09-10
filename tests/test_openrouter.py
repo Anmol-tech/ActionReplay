@@ -125,3 +125,40 @@ async def test_model_feature_preflight(modalities, params):
         assert raised.value.details["tool_choice"] is ("tool_choice" in params)
     finally:
         await client.close()
+
+
+async def test_invalid_finish_decision_reports_schema_details():
+    def transport(request):
+        return httpx.Response(
+            200,
+            json={
+                "id": "request-bad",
+                "choices": [
+                    {
+                        "message": {
+                            "tool_calls": [
+                                {
+                                    "function": {
+                                        "name": "perform",
+                                        "arguments": json.dumps({"kind": "finish", "success": []}),
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+            },
+        )
+
+    client = OpenRouterClient(api_key="synthetic-test-key", model="test/model")
+    await client.client.aclose()
+    client.client = httpx.AsyncClient(
+        base_url="https://openrouter.ai/api/v1", transport=httpx.MockTransport(transport)
+    )
+    try:
+        with pytest.raises(AutomationError, match="MODEL_DECISION_SCHEMA_INVALID") as raised:
+            await client.decide("goal", {}, {"frames": [], "screenshot": "AA=="}, [], {})
+        assert raised.value.details["validation_error_count"] >= 1
+        assert raised.value.details["validation_errors"]
+    finally:
+        await client.close()

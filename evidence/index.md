@@ -1,6 +1,14 @@
 # Evidence index
 
-Provenance is explicit. Offline fixtures are not genuine discovery evidence.
+Provenance is explicit. Prefer the `live` discovery/replay entries for the assignment demonstration; offline fixtures remain for handoff/transient paths.
+
+## Live OpenRouter demonstration
+
+- [7ad50bfbfbc443c49874a1e0bb7e76e2](7ad50bfbfbc443c49874a1e0bb7e76e2/manifest.json) — discovery, live, result `OK`. [Events](7ad50bfbfbc443c49874a1e0bb7e76e2/events.jsonl), [capability](7ad50bfbfbc443c49874a1e0bb7e76e2/capability.json).
+- [755f7eba08044d5788225e703fca8337](755f7eba08044d5788225e703fca8337/manifest.json) — replay, live, alternate inputs, result `OK`. [Events](755f7eba08044d5788225e703fca8337/events.jsonl), [capability](755f7eba08044d5788225e703fca8337/capability.json).
+- [1a3caae3010a429c9082ca2a6509141f](1a3caae3010a429c9082ca2a6509141f/manifest.json) — replay, live, result `MEMBER_NOT_FOUND`. [Events](1a3caae3010a429c9082ca2a6509141f/events.jsonl), [capability](1a3caae3010a429c9082ca2a6509141f/capability.json).
+
+## Offline / fixture demonstrations
 
 - [06ea56e6273640d1963aa29234eaa760](06ea56e6273640d1963aa29234eaa760/manifest.json) — replay, offline-artifact-real-browser, scenario `normal`, result `MEMBER_NOT_FOUND`. [Events](06ea56e6273640d1963aa29234eaa760/events.jsonl), [capability](06ea56e6273640d1963aa29234eaa760/capability.json).
 - [17df00c3bcbd49acb68a8290b58f0746](17df00c3bcbd49acb68a8290b58f0746/manifest.json) — replay, offline-artifact-real-browser, scenario `normal`, result `OK`. [Events](17df00c3bcbd49acb68a8290b58f0746/events.jsonl), [capability](17df00c3bcbd49acb68a8290b58f0746/capability.json).
