@@ -1,0 +1,123 @@
+{
+  "run_id": "58980d9f11614b41ad16e6c441636b3b",
+  "mode": "replay",
+  "started_at": "2026-09-09T00:31:25.499110+00:00",
+  "state": "finished",
+  "software_version": "0.1.0",
+  "schema_version": "1.0",
+  "provenance": "offline-artifact-real-browser",
+  "configuration": {
+    "discovery": {
+      "max_steps": 30,
+      "max_duration_seconds": 300,
+      "max_consecutive_no_progress": 3
+    },
+    "execution": {
+      "action_timeout_seconds": 10.0,
+      "max_recovery_attempts": 2
+    },
+    "handoff": {
+      "timeout_seconds": 900.0
+    },
+    "evidence": {
+      "directory": "runs/offline-demo",
+      "retention_days": 7
+    },
+    "policy": {
+      "base_url": "http://127.0.0.1:58973",
+      "allowed_routes": [
+        "/",
+        "/shell",
+        "/workspace",
+        "/search",
+        "/member",
+        "/account",
+        "/new",
+        "/review",
+        "/restore",
+        "/continue"
+      ],
+      "allowed_actions": [
+        "navigate",
+        "click",
+        "fill",
+        "select",
+        "press",
+        "scroll",
+        "wait_for",
+        "assert",
+        "extract"
+      ],
+      "safe_click_labels": [
+        "Search",
+        "Open member",
+        "Savings",
+        "Checking",
+        "Prepare sub-account",
+        "Review",
+        "Back",
+        "Continue"
+      ],
+      "safe_field_names": [
+        "Member ID",
+        "Account type",
+        "Nickname",
+        "member_id",
+        "account_type",
+        "nickname"
+      ],
+      "approved_literals": [
+        "Savings",
+        "Checking",
+        "Member ID",
+        "Account type",
+        "Nickname",
+        "Search",
+        "Open member",
+        "Prepare sub-account",
+        "Review",
+        "Back",
+        "Continue",
+        "Savings balance",
+        "Checking balance",
+        "Amount",
+        "Member details",
+        "Sub-account review",
+        "Account type:",
+        "Nickname:",
+        "Member servicing",
+        "Search results"
+      ],
+      "approved_attributes": {
+        "name": [
+          "shell",
+          "workspace",
+          "member_id",
+          "account_type",
+          "nickname"
+        ],
+        "title": [
+          "Bank shell",
+          "Workspace"
+        ],
+        "id": [
+          "member",
+          "nickname"
+        ],
+        "placeholder": []
+      }
+    },
+    "application_family": "legacy-bank",
+    "application_version": "1.0",
+    "startup_text": "LegacyBank 1.0 — Staff workspace",
+    "headless": true,
+    "scenario": "normal"
+  },
+  "scenario": "transient",
+  "capability_id": "offline-recorded-balance",
+  "revision": 1,
+  "capability_hash": "87a2a65201ef7d49947ddf0ccfe659440498658bff2f2e609faf38f19f64027d",
+  "source_run_id": "57bfe9b54b07485cbaa080e8d9465989",
+  "finished_at": "2026-09-09T00:31:26.846633+00:00",
+  "status": "success"
+}

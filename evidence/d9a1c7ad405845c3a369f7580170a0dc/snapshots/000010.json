@@ -1,0 +1,39 @@
+{
+  "frames": [
+    {
+      "route": "/",
+      "controls": [
+        {
+          "tag": "h1",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        }
+      ]
+    },
+    {
+      "route": "/shell",
+      "controls": []
+    },
+    {
+      "route": "/search",
+      "controls": [
+        {
+          "tag": "p",
+          "label": "[REDACTED]",
+          "text": "Session expired"
+        },
+        {
+          "tag": "p",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        },
+        {
+          "tag": "a",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        }
+      ]
+    }
+  ],
+  "native_dialog": false
+}

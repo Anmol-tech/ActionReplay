@@ -1,0 +1,14 @@
+discovery:
+  max_steps: 30
+  max_duration_seconds: 300
+  max_consecutive_no_progress: 3
+execution:
+  action_timeout_seconds: 10
+  max_recovery_attempts: 2
+handoff:
+  timeout_seconds: 900
+evidence:
+  directory: ./runs
+  retention_days: 7
+headless: false
+scenario: normal

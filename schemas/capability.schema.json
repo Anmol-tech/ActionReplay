@@ -1,0 +1,933 @@
+{
+  "$defs": {
+    "Application": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "title": "Family",
+          "type": "string"
+        },
+        "surface": {
+          "const": "browser",
+          "default": "browser",
+          "title": "Surface",
+          "type": "string"
+        },
+        "versions": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Versions",
+          "type": "array"
+        },
+        "entry_route": {
+          "default": "/",
+          "title": "Entry Route",
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "versions"
+      ],
+      "title": "Application",
+      "type": "object"
+    },
+    "Binding": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "input",
+            "literal",
+            "variable"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Binding",
+      "type": "object"
+    },
+    "Check": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "enum": [
+            "wait_for",
+            "assert"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/$defs/Condition"
+        }
+      },
+      "required": [
+        "id",
+        "action",
+        "condition"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "Click": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "const": "click",
+          "title": "Action",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "action",
+        "target"
+      ],
+      "title": "Click",
+      "type": "object"
+    },
+    "Condition": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "visible",
+            "text_equals",
+            "value_equals",
+            "route",
+            "variable_equals",
+            "all",
+            "any",
+            "not"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "variable": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variable"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Condition",
+      "type": "object"
+    },
+    "Contract": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "default": "string",
+          "enum": [
+            "string",
+            "integer",
+            "decimal",
+            "boolean",
+            "enum"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "required": {
+          "default": true,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "sensitive": {
+          "default": true,
+          "title": "Sensitive",
+          "type": "boolean"
+        },
+        "enum": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Enum",
+          "type": "array"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "variable": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Variable"
+        }
+      },
+      "title": "Contract",
+      "type": "object"
+    },
+    "Extract": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "const": "extract",
+          "title": "Action",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "variable": {
+          "title": "Variable",
+          "type": "string"
+        },
+        "source": {
+          "default": "text",
+          "enum": [
+            "text",
+            "value"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "conversion": {
+          "default": "text",
+          "enum": [
+            "text",
+            "integer",
+            "decimal",
+            "currency"
+          ],
+          "title": "Conversion",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "action",
+        "target",
+        "variable"
+      ],
+      "title": "Extract",
+      "type": "object"
+    },
+    "Fill": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "enum": [
+            "fill",
+            "select"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/Binding"
+        }
+      },
+      "required": [
+        "id",
+        "action",
+        "target",
+        "value"
+      ],
+      "title": "Fill",
+      "type": "object"
+    },
+    "Locator": {
+      "additionalProperties": false,
+      "properties": {
+        "strategy": {
+          "enum": [
+            "role",
+            "label",
+            "text",
+            "attribute",
+            "anchored"
+          ],
+          "title": "Strategy",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Role"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "enum": [
+                "name",
+                "title",
+                "placeholder",
+                "id"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "child_role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Child Role"
+        },
+        "child_name": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Binding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "child_tag": {
+          "anyOf": [
+            {
+              "enum": [
+                "input",
+                "select",
+                "td",
+                "a",
+                "button",
+                "output"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Child Tag"
+        }
+      },
+      "required": [
+        "strategy"
+      ],
+      "title": "Locator",
+      "type": "object"
+    },
+    "Navigate": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "const": "navigate",
+          "title": "Action",
+          "type": "string"
+        },
+        "route": {
+          "$ref": "#/$defs/Binding"
+        }
+      },
+      "required": [
+        "id",
+        "action",
+        "route"
+      ],
+      "title": "Navigate",
+      "type": "object"
+    },
+    "Outcome": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/$defs/Condition"
+        },
+        "response": {
+          "enum": [
+            "business_outcome",
+            "failure",
+            "intervention",
+            "recover"
+          ],
+          "title": "Response",
+          "type": "string"
+        },
+        "recovery": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "assert": "#/$defs/Check",
+                "click": "#/$defs/Click",
+                "extract": "#/$defs/Extract",
+                "fill": "#/$defs/Fill",
+                "navigate": "#/$defs/Navigate",
+                "press": "#/$defs/Press",
+                "scroll": "#/$defs/Scroll",
+                "select": "#/$defs/Fill",
+                "wait_for": "#/$defs/Check"
+              },
+              "propertyName": "action"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Navigate"
+              },
+              {
+                "$ref": "#/$defs/Click"
+              },
+              {
+                "$ref": "#/$defs/Fill"
+              },
+              {
+                "$ref": "#/$defs/Press"
+              },
+              {
+                "$ref": "#/$defs/Scroll"
+              },
+              {
+                "$ref": "#/$defs/Check"
+              },
+              {
+                "$ref": "#/$defs/Extract"
+              }
+            ]
+          },
+          "maxItems": 3,
+          "title": "Recovery",
+          "type": "array"
+        }
+      },
+      "required": [
+        "code",
+        "condition",
+        "response"
+      ],
+      "title": "Outcome",
+      "type": "object"
+    },
+    "Press": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "const": "press",
+          "title": "Action",
+          "type": "string"
+        },
+        "target": {
+          "title": "Target",
+          "type": "string"
+        },
+        "key": {
+          "enum": [
+            "Tab",
+            "ArrowDown",
+            "ArrowUp",
+            "Escape",
+            "Space"
+          ],
+          "title": "Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "action",
+        "target",
+        "key"
+      ],
+      "title": "Press",
+      "type": "object"
+    },
+    "Scroll": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "preconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Preconditions",
+          "type": "array"
+        },
+        "postconditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Postconditions",
+          "type": "array"
+        },
+        "action": {
+          "const": "scroll",
+          "title": "Action",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        },
+        "delta_y": {
+          "default": 500,
+          "maximum": 2000,
+          "minimum": -2000,
+          "title": "Delta Y",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "action"
+      ],
+      "title": "Scroll",
+      "type": "object"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "frame_path": {
+          "items": {
+            "$ref": "#/$defs/Locator"
+          },
+          "title": "Frame Path",
+          "type": "array"
+        },
+        "locator": {
+          "$ref": "#/$defs/Locator"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Locator"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "description": {
+          "default": "UI target",
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "locator"
+      ],
+      "title": "Target",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "capability_id": {
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "title": "Capability Id",
+      "type": "string"
+    },
+    "revision": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "source_run_id": {
+      "title": "Source Run Id",
+      "type": "string"
+    },
+    "application": {
+      "$ref": "#/$defs/Application"
+    },
+    "inputs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Contract"
+      },
+      "title": "Inputs",
+      "type": "object"
+    },
+    "outputs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Contract"
+      },
+      "title": "Outputs",
+      "type": "object"
+    },
+    "targets": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Target"
+      },
+      "title": "Targets",
+      "type": "object"
+    },
+    "steps": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "assert": "#/$defs/Check",
+            "click": "#/$defs/Click",
+            "extract": "#/$defs/Extract",
+            "fill": "#/$defs/Fill",
+            "navigate": "#/$defs/Navigate",
+            "press": "#/$defs/Press",
+            "scroll": "#/$defs/Scroll",
+            "select": "#/$defs/Fill",
+            "wait_for": "#/$defs/Check"
+          },
+          "propertyName": "action"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Navigate"
+          },
+          {
+            "$ref": "#/$defs/Click"
+          },
+          {
+            "$ref": "#/$defs/Fill"
+          },
+          {
+            "$ref": "#/$defs/Press"
+          },
+          {
+            "$ref": "#/$defs/Scroll"
+          },
+          {
+            "$ref": "#/$defs/Check"
+          },
+          {
+            "$ref": "#/$defs/Extract"
+          }
+        ]
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+    },
+    "outcomes": {
+      "items": {
+        "$ref": "#/$defs/Outcome"
+      },
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "success": {
+      "items": {
+        "$ref": "#/$defs/Condition"
+      },
+      "minItems": 1,
+      "title": "Success",
+      "type": "array"
+    }
+  },
+  "required": [
+    "capability_id",
+    "name",
+    "description",
+    "source_run_id",
+    "application",
+    "inputs",
+    "outputs",
+    "targets",
+    "steps",
+    "success"
+  ],
+  "title": "Capability",
+  "type": "object"
+}

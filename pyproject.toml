@@ -1,0 +1,26 @@
+[project]
+name = "actionreplay"
+version = "0.1.0"
+description = "Discover UI capabilities, replay deterministically, and hand live sessions to humans"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115", "uvicorn>=0.30", "playwright>=1.58", "pydantic>=2.10", "httpx>=0.28", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.25", "ruff>=0.11"]
+
+[project.scripts]
+actionreplay = "actionreplay.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]
