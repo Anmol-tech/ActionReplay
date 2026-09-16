@@ -30,17 +30,19 @@ OpenRouter discovery preflights `/models` for image input and tool-calling suppo
 
 The mock listens on `127.0.0.1:8000`; the coordinator/operator page uses `127.0.0.1:8001`. `serve` prints the local operator URL. The coordinator accepts requests only from loopback hosts and the operator page's own origin; it does not use a URL token. Browser outputs remain in process memory and local-origin responses only.
 
-### Start discovery from the UI
+The demo bank is a nested-frame **LegacyBank 1.0** teller workstation with a real in-memory ledger: member search, balances, transfers with dual-control verification, sub-account prep, create/delete member, confirmation references, and insufficient-funds / duplicate-member errors. Automation still cannot click irreversible confirms or staff authorization.
 
-The operator page also contains a **New discovery** form, so a second terminal is optional. Open the complete Operator URL printed by `serve`, then provide:
+### Start discovery or replay from the UI
 
-- the natural-language goal,
-- the allowed target URL,
-- a lowercase capability name,
-- named inputs as a JSON object,
-- the step and time limits.
+Open the Operator URL printed by `serve`. The page is organized status-first:
 
-Select **Start discovery** and watch the live status on the same page. If intervention is required, its Take Control and Resume controls appear alongside the run. After success, the page shows the returned outputs and the capability/run artifact locations. The API key stays in the server process and is never sent to or displayed by the page.
+1. **Live session** at the top — ownership, progress, and Take Control / Resume when needed.
+2. **Discover / Replay tabs** — one workflow at a time.
+3. **Run result** below after a run finishes.
+
+For discovery, provide the goal, allowed target URL, capability name, inputs JSON, and optional limits under **Limits & budget**. Select **Start discovery**.
+
+For replay, open the **Replay** tab, choose a capability/revision (or `offline-balance`), edit inputs, and select **Start replay**. No model key is required for replay. After a successful discovery, the UI switches to Replay with the new capability selected.
 
 The server terminal streams sanitized lifecycle events as JSON, including browser startup, model preflight, observations, model requests, requested actions, rejected decisions, interventions, and the final result. Input values and the OpenRouter key are redacted. For stack traces during local debugging, put the global logging option before the command:
 
@@ -89,6 +91,39 @@ uv run actionreplay discover \
 
 The agent chooses the sequence from screenshots and rendered controls. The banking mock provides screens/buttons; it does not provide a discovery recipe. Final account creation is blocked by policy.
 
+### Harder flows (human during discovery)
+
+Transfer / create / delete require **staff verification** (`Verify staff authorization`) that automation cannot click. Irreversible **Confirm transfer|create|delete** buttons are also policy-blocked. Typical loop:
+
+1. Start discovery with a review-only goal (operator UI presets, or CLI below).
+2. When the run pauses on `STAFF_VERIFICATION_REQUIRED` or `POLICY_RISKY_CONTROL`, **Take Control**.
+3. In Chromium click **Verify staff authorization** (and later any allowed navigation you need).
+4. **Resume** so the model continues, extracts review values, and finishes without confirming.
+
+```bash
+uv run actionreplay discover \
+  --goal 'Prepare a funds transfer for the supplied member using from_account and amount. After staff verification, stop on transfer review and return the displayed amount. Do not confirm.' \
+  --target http://127.0.0.1:8000 \
+  --inputs-file examples/transfer.json \
+  --capability transfer-review
+
+uv run actionreplay discover \
+  --goal 'Prepare creating a new member using new_member_id and display_name. After staff verification, stop on create review and return the new member ID. Do not confirm.' \
+  --target http://127.0.0.1:8000 \
+  --inputs-file examples/create-member.json \
+  --capability create-member-review
+```
+
+### Assisted replay on UI drift
+
+Replay stays model-free by default. Set `execution.assisted_fallback: true` (and configure OpenRouter) to allow at most `assisted_fallback_max_per_run` policy-checked LLM actions when a step misses its target. With `--scenario drift`, the transfer review button label changes to **Continue to review**; a recorded **Review transfer** click fails, assist can click the new label, then deterministic replay continues.
+
+```bash
+# config.yaml: execution.assisted_fallback: true
+uv run actionreplay serve --scenario drift
+# Replay a transfer-review capability from the operator UI
+```
+
 ## Run without live services
 
 No key is needed to start the mock, use the operator page, or replay the hand-authored reference artifact:
@@ -135,7 +170,7 @@ uv run actionreplay replay --artifact examples/offline-balance.json --inputs-fil
 
 The same tab, context, and cookies remain alive. Automation cannot act while ownership is `HUMAN`. Resume checks the interrupted step's precondition/postcondition; an incompatible state stays paused. Manual actions are logged with values redacted and never silently incorporated into the artifact.
 
-Other scenarios: `permission`, `slow`, `transient`, `interstitial`, and `dialog`. Use `--scenario dialog` to exercise an unknown HTML dialog, resolve it in the same browser, and resume. Native JavaScript dialogs can be dismissed explicitly through the operator page while the human owns the session. `--headless` is suitable for automated tests, not interactive local takeover.
+Other scenarios: `permission`, `slow`, `transient`, `interstitial`, `dialog`, and `drift` (label change for assisted fallback demos). Use `--scenario dialog` to exercise an unknown HTML dialog, resolve it in the same browser, and resume. Native JavaScript dialogs can be dismissed explicitly through the operator page while the human owns the session. `--headless` is suitable for automated tests, not interactive local takeover.
 
 ## Configuration and execution bounds
 
@@ -146,6 +181,7 @@ Defaults are in `config.example.yaml`. Precedence is defaults → config file �
 - `discovery.max_consecutive_no_progress`: 3.
 - `execution.action_timeout_seconds`: 10.
 - `execution.max_recovery_attempts`: 2, including known interstitial handlers.
+- `execution.assisted_fallback` / `assisted_fallback_max_per_run`: optional bounded OpenRouter single-step recovery on replay UI drift (default off / 1).
 - `handoff.timeout_seconds`: 900.
 - `evidence.retention_days`: 7.
 

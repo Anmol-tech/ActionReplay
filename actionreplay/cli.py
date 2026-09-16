@@ -32,7 +32,16 @@ def parser():
     serve.add_argument("--headless", action="store_true", default=None)
     serve.add_argument(
         "--scenario",
-        choices=["normal", "permission", "session", "slow", "transient", "interstitial", "dialog"],
+        choices=[
+            "normal",
+            "permission",
+            "session",
+            "slow",
+            "transient",
+            "interstitial",
+            "dialog",
+            "drift",
+        ],
     )
     discover = sub.add_parser("discover")
     discover.add_argument("--goal", required=True)

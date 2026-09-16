@@ -99,13 +99,37 @@ class BrowserSurface:
         self.page = await self.context.new_page()
 
     async def _request(self, route):
+        url = route.request.url
+        resource = route.request.resource_type
         try:
-            self.policy.url(route.request.url)
+            self.policy.url(url)
         except (AutomationError, ValueError):
+            # Humans may visit/submit non-allowlisted same-origin paths (e.g. Confirm creation → /commit).
+            if self.owner() == "HUMAN" and self._same_origin(url):
+                await route.continue_()
+                return
+            # Drop third-party assets quietly; do not poison the run with POLICY_ROUTE_BLOCKED.
+            if resource in {"stylesheet", "font", "image", "media", "script", "ping"} and not self._same_origin(
+                url
+            ):
+                await route.abort()
+                return
             self.blocked = "POLICY_ROUTE_BLOCKED"
             await route.abort()
         else:
             await route.continue_()
+
+    def _same_origin(self, url: str) -> bool:
+        parsed = urlsplit(url)
+        if parsed.username or parsed.password:
+            return False
+        origin = (
+            parsed.scheme,
+            parsed.hostname,
+            parsed.port or (443 if parsed.scheme == "https" else 80),
+        )
+        path = parsed.path or "/"
+        return origin == self.policy.origin and ".." not in path.split("/")
 
     def _new_page(self, page):
         page.on("dialog", lambda dialog: setattr(self, "dialog", dialog))
@@ -157,9 +181,27 @@ class BrowserSurface:
     async def resume_ready(self):
         if not self.page or self.page.is_closed() or self.dialog or len(self.context.pages) != 1:
             return False
+        self.blocked = None
         try:
             for frame in self.page.frames:
-                self.policy.url(frame.url)
+                url = frame.url or ""
+                if not url.startswith("http"):
+                    # about:blank / chrome-error after an aborted commit — human must leave first.
+                    if url.startswith("chrome-error:") or url.startswith("chrome-untrusted:"):
+                        return False
+                    continue
+                try:
+                    self.policy.url(url)
+                except (AutomationError, ValueError):
+                    # Human may finish on irreversible commit routes; allow resume from there.
+                    path = urlsplit(url).path or "/"
+                    if not self._same_origin(url) or path not in {
+                        "/commit",
+                        "/transfer-commit",
+                        "/create-commit",
+                        "/delete-commit",
+                    }:
+                        return False
         except (AutomationError, ValueError):
             return False
         return True
@@ -307,11 +349,24 @@ class BrowserSurface:
                 "Account not found",
                 "Invalid member ID",
                 "Invalid nickname",
+                "Invalid amount",
+                "Invalid member draft",
                 "Permission denied",
                 "Session expired",
                 "Temporary service failure",
                 "Maintenance notice",
                 "Unexpected verification required",
+                "Staff verification required",
+                "Verify staff authorization",
+                "Operator verifies",
+                "Confirm transfer",
+                "Confirm create",
+                "Confirm delete",
+                "Confirm creation",
+                "Insufficient funds",
+                "Invalid account combination",
+                "Member already exists",
+                "Confirmation reference",
             ]
         )
         frames = []
@@ -365,7 +420,15 @@ class BrowserSurface:
 
     async def extract_value(self, step, targets, inputs, variables):
         control = await self.resolve_target(targets[step.target], inputs, variables)
-        raw = await control.inner_text() if step.source == "text" else await control.input_value()
+        raw = None
+        if step.source == "text":
+            raw = await control.inner_text()
+        else:
+            try:
+                raw = await control.input_value()
+            except Exception:
+                # <output> and other non-inputs are common review targets; fall back to text.
+                raw = await control.inner_text()
         self.evidence.sanitizer.add(raw)
         value = convert(raw, step.conversion)
         self.evidence.sanitizer.add(value)

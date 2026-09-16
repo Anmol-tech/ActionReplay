@@ -196,6 +196,10 @@ Use click for existing links rather than constructing data-dependent routes. No 
 Use extract to read output text into a named variable before finishing; choose currency for USD amounts.
 Use anchored output controls where offered. Observations include visible labels, frame routes, and control refs.
 Only finish after extracting requested values. For a review-only goal, extract the displayed review values. Do not click final submit.
+Staff verification and irreversible confirms (Verify staff authorization, Confirm transfer/create/delete/creation) are blocked for automation.
+When blocked, wait for the human operator; after Resume, continue from the new screenshot.
+On Sub-account review / Transfer review / Create or Delete review: extract the requested output (source=text on the output control), then kind=finish. Never click Confirm.
+If Confirm was already used and the review screen is gone, reopen the flow to the review screen, extract, and finish without confirming again.
 If the last executed action was extract and extracted_variables is non-empty, return kind=finish now.
 Finish shape (replace names/refs): """ + FINISH_EXAMPLE + """
 Finish success conditions must use visible (or route) on CURRENT e-refs for approved headings/labels.
@@ -297,7 +301,8 @@ def rejection_guidance(code):
             "Choose a target ref that exists in the current visible_ui observation."
         ),
         "MODEL_OR_ACTION_INVALID": (
-            "Return exactly one perform tool call that matches the supplied action schema."
+            "Return exactly one perform tool call that matches the supplied action schema. "
+            "For review screens, extract with source=text on the Nickname/Amount output, then finish."
         ),
         "MODEL_TOOL_CALL_MISSING": "Return exactly one perform tool call; after extraction, use kind=finish.",
         "MODEL_TOOL_CALL_INVALID": "Return one valid perform tool call with a function name and JSON arguments.",
@@ -313,6 +318,11 @@ def rejection_guidance(code):
         "UNAPPROVED_ARTIFACT_LITERAL": (
             "Use only approved literal labels/headings in artifacts. For finish, prefer kind=visible "
             "on a CURRENT e-ref; do not embed amounts or member IDs as literals."
+        ),
+        "POLICY_RISKY_CONTROL": (
+            "That control is human-only (staff verification or irreversible confirm). "
+            "For review-only goals, do not Confirm — extract the review output and kind=finish. "
+            "If you need a human, wait for Take Control / Resume, then continue from a new observation."
         ),
     }.get(code, "Re-observe the current UI and choose a valid policy-compliant action.")
 
@@ -346,14 +356,14 @@ class OpenRouterClient:
             raise AutomationError("MODEL_REQUIRES_IMAGE_AND_TOOLS", details=details)
         return details
 
-    async def decide(self, goal, inputs, observation, history, policy):
+    async def decide(self, goal, inputs, observation, history, policy, system_prompt=None):
         response = await self.client.post(
             "/chat/completions",
             json={
                 "model": self.model,
                 "provider": {"require_parameters": True, "data_collection": "deny"},
                 "messages": [
-                    {"role": "system", "content": SYSTEM},
+                    {"role": "system", "content": system_prompt or SYSTEM},
                     {
                         "role": "user",
                         "content": [

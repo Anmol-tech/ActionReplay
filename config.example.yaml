@@ -5,6 +5,10 @@ discovery:
 execution:
   action_timeout_seconds: 10
   max_recovery_attempts: 2
+  # Optional bounded OpenRouter single-step recovery when replay hits UI drift.
+  # Keep false for pure model-free replay; set true to allow one assist step per run.
+  assisted_fallback: false
+  assisted_fallback_max_per_run: 1
 handoff:
   timeout_seconds: 900
 evidence:

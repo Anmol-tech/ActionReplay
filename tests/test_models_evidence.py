@@ -63,6 +63,15 @@ def test_policy():
             p.url(url)
     with pytest.raises(AutomationError):
         p.control("click", "Confirm creation")
+    for label in [
+        "Confirm transfer",
+        "Confirm create",
+        "Confirm delete",
+        "Operator verifies",
+        "Verify staff authorization",
+    ]:
+        with pytest.raises(AutomationError, match="POLICY_RISKY_CONTROL"):
+            p.control("click", label)
 
 
 def test_evidence_redaction_hash_export_cleanup(tmp_path):

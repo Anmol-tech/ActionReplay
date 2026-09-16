@@ -39,6 +39,14 @@ async def test_policy_blocks_real_side_effect(tmp_path, mock_server):
         with pytest.raises(PlaywrightError):
             await frame.evaluate("fetch('/commit', {method:'POST'})")
         assert surface.blocked == "POLICY_ROUTE_BLOCKED"
+        # Human ownership may submit the irreversible form; request must not be aborted.
+        surface.blocked = None
+        controller.owner = "HUMAN"
+        status = await frame.evaluate(
+            "async () => (await fetch('/commit', {method:'POST', redirect:'follow'})).status"
+        )
+        assert status == 200
+        assert surface.blocked is None
     finally:
         await surface.close()
 

@@ -4,86 +4,610 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ActionReplay · Discovery & control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
-    :root { color-scheme: dark; --bg:#111b27; --panel:#1b2a3b; --border:#3c5169; --muted:#b7c7d8; --accent:#7dd3fc; }
-    * { box-sizing:border-box; }
-    body { font:16px/1.5 system-ui,sans-serif; max-width:1160px; margin:40px auto; background:var(--bg); color:#e8eef5; padding:0 24px; }
-    header { display:flex; justify-content:space-between; align-items:center; gap:24px; margin-bottom:28px; }
-    h1 { margin:0; font-size:32px; letter-spacing:-1px; } h2 { margin:0 0 12px; font-size:22px; }
-    p { margin:8px 0 16px; } .muted,small { color:var(--muted); } small { display:block; margin-top:5px; }
-    .eyebrow { color:var(--accent); font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
-    .badge { border:1px solid var(--border); padding:8px 12px; border-radius:20px; color:var(--muted); font-size:13px; }
-    main { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:20px; align-items:start; }
-    section { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:20px; min-width:0; }
-    label { display:block; font-size:14px; font-weight:600; margin-bottom:6px; }
-    .field { margin:0 0 18px; } .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-    input,textarea { width:100%; padding:11px 12px; font:inherit; color:inherit; border:1px solid #52677e; background:#101c29; border-radius:6px; }
-    textarea { resize:vertical; min-height:96px; } #inputs { font:14px/1.5 ui-monospace,monospace; min-height:112px; }
-    button { background:var(--accent); color:#102334; border:1px solid transparent; border-radius:6px; padding:11px 16px; font:600 14px system-ui; cursor:pointer; }
-    button.secondary { background:transparent; color:#e8eef5; border-color:#71859b; }
-    button.danger { background:transparent; color:#fca5a5; border-color:#b9656a; }
-    button:disabled { opacity:.4; cursor:default; } button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
-    fieldset { border:0; margin:0; padding:0; min-width:0; }
-    .actions { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
-    .error { color:#fca5a5; white-space:pre-wrap; } .error:empty { display:none; }
-    .notice { padding:12px; background:#102334; border-left:3px solid var(--accent); font-size:14px; overflow-wrap:anywhere; }
-    pre { font:13px/1.6 ui-monospace,monospace; white-space:pre-wrap; overflow-wrap:anywhere; margin:12px 0 0; }
-    summary { cursor:pointer; font-size:14px; color:var(--muted); padding:8px 0; }
-    #status { font-size:20px; letter-spacing:.5px; } #model { overflow-wrap:anywhere; }
-    [hidden] { display:none !important; }
-    @media(max-width:800px) { main { grid-template-columns:1fr; } body { margin-top:24px; } header { align-items:flex-start; } }
-    @media(max-width:460px) { .row { grid-template-columns:1fr; gap:0; } section { padding:18px; } body { padding:0 16px; } header { display:block; } .badge { display:inline-block; margin-top:12px; } }
+    :root {
+      color-scheme: light;
+      --ink: #12202c;
+      --ink-soft: #3d5163;
+      --muted: #6a7f92;
+      --paper: #eef3f6;
+      --line: #c9d6e1;
+      --accent: #0f766e;
+      --accent-strong: #0b5f59;
+      --accent-soft: #d8f3ef;
+      --warn: #9a3412;
+      --warn-bg: #fff6ed;
+      --warn-line: #f0d2b0;
+      --danger: #b42318;
+      --danger-soft: #fde8e6;
+      --ok: #166534;
+      --ok-bg: #ecf8ef;
+      --shadow: 0 14px 34px rgba(18, 32, 44, 0.08);
+      --radius: 16px;
+      --font: "Outfit", sans-serif;
+      --display: "Syne", sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font: 16px/1.5 var(--font);
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 0% -5%, rgba(15, 118, 110, 0.14), transparent 55%),
+        radial-gradient(640px 360px at 100% 0%, rgba(14, 116, 144, 0.1), transparent 50%),
+        linear-gradient(180deg, #f5f8fa, var(--paper) 40%, #e8eef3);
+      padding: 20px 16px 40px;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.28;
+      background-image:
+        linear-gradient(rgba(18, 32, 44, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 32, 44, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(#000, transparent 90%);
+    }
+    .shell { position: relative; z-index: 1; width: min(1080px, 100%); margin: 0 auto; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.3); }
+      50% { box-shadow: 0 0 0 7px rgba(15, 118, 110, 0); }
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      animation: rise 0.45s ease both;
+    }
+    .brand-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    h1.brand {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.8rem, 4vw, 2.35rem);
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .brand-sub { margin: 0; color: var(--muted); font-size: 14px; }
+    .workspace-chip {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.75);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* 1) Live status always first */
+    .status-card {
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      margin-bottom: 14px;
+      animation: rise 0.5s ease both;
+    }
+    .status-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+      flex-wrap: wrap;
+    }
+    .live-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--muted);
+    }
+    body[data-owner="AUTOMATION"] .live-dot { background: var(--accent); animation: pulse-ring 1.35s ease infinite; }
+    body[data-owner="PAUSED"] .live-dot,
+    body[data-owner="HUMAN"] .live-dot { background: var(--warn); }
+    body[data-owner="FINISHED"] .live-dot { background: var(--ok); }
+    #status {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.55rem, 3.2vw, 2rem);
+      letter-spacing: -0.03em;
+    }
+    #reason { margin: 8px 0 0; color: var(--ink-soft); max-width: 46rem; }
+    .status-meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+      min-width: 10rem;
+    }
+    .status-meta strong { display: block; color: var(--ink-soft); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 2px; }
+    body[data-owner="PAUSED"] .status-card,
+    body[data-owner="HUMAN"] .status-card {
+      border-color: var(--warn-line);
+      background: linear-gradient(180deg, #fffaf4, #fff);
+    }
+    body[data-owner="FINISHED"] .status-card {
+      border-color: #c6e6cf;
+      background: linear-gradient(180deg, var(--ok-bg), #fff);
+    }
+
+    /* 2) Handoff as urgent full-width action strip */
+    #handoff {
+      margin: 12px 0 0;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid var(--warn-line);
+      background: var(--warn-bg);
+    }
+    #handoff > p { margin: 0 0 12px; color: var(--ink-soft); }
+    .handoff-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+
+    /* 3) Workflow tabs — one job at a time */
+    .workflow {
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: rise 0.55s ease both;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      background: #f3f7f9;
+    }
+    .tab {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 14px 16px;
+      font: 650 14px var(--font);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      transform: none;
+    }
+    .tab:hover:not(:disabled) { background: rgba(255,255,255,0.7); color: var(--ink); transform: none; }
+    .tab[aria-selected="true"] {
+      background: #fff;
+      color: var(--ink);
+      border-bottom-color: var(--accent);
+    }
+    .tab small {
+      display: block;
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    .tab-panel { display: none; padding: 22px; }
+    .tab-panel.active { display: block; animation: rise 0.28s ease both; }
+    .panel-intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(200px, 0.8fr);
+      gap: 18px;
+      margin-bottom: 18px;
+      align-items: start;
+    }
+    .panel-intro h2 {
+      margin: 0 0 6px;
+      font-family: var(--display);
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+    }
+    .panel-intro p { margin: 0; color: var(--ink-soft); }
+    .helper-card {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #cfe8e3;
+      background: var(--accent-soft);
+      color: var(--ink-soft);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      max-width: 44rem;
+    }
+    .form-grid.wide { max-width: none; }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+    .field { margin: 0 0 14px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    input, textarea, select {
+      width: 100%;
+      padding: 11px 12px;
+      font: inherit;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 10px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+    textarea { resize: vertical; min-height: 88px; }
+    #inputs, #replay-inputs, pre { font: 13px/1.55 var(--mono); }
+    #inputs, #replay-inputs { min-height: 100px; }
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    button {
+      appearance: none;
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font: 600 14px var(--font);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+    }
+    button:hover:not(:disabled) { background: var(--accent-strong); transform: translateY(-1px); }
+    button:active:not(:disabled) { transform: none; }
+    button.secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+    button.secondary:hover:not(:disabled) { background: #f7fafc; }
+    button.danger { background: #fff; color: var(--danger); border-color: #f0b4ae; }
+    button.danger:hover:not(:disabled) { background: var(--danger-soft); }
+    button:disabled { opacity: 0.42; cursor: default; transform: none; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible, .tab:focus-visible {
+      outline: 3px solid rgba(15, 118, 110, 0.32);
+      outline-offset: 2px;
+    }
+    fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .error {
+      color: var(--danger);
+      background: var(--danger-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      margin: 0 0 12px;
+    }
+    .error:empty { display: none; }
+    .notice {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      font-size: 13px;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+    }
+    .muted, small { color: var(--muted); }
+    small { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.4; }
+    details.advanced {
+      margin: 4px 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fbfc;
+      padding: 0 12px;
+    }
+    details.advanced summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--ink-soft);
+      padding: 11px 0;
+    }
+    details.advanced[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+    pre {
+      margin: 10px 0 0;
+      padding: 12px;
+      background: #0f1a24;
+      color: #d7e6f0;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    summary { cursor: pointer; font-size: 14px; color: var(--muted); padding: 8px 0; font-weight: 600; }
+
+    /* 4) Results below the workflow */
+    .outcome-stack { display: grid; gap: 12px; margin-top: 14px; }
+    .outcome-card {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      animation: rise 0.35s ease both;
+    }
+    .outcome-card h2 {
+      margin: 0 0 8px;
+      font-family: var(--display);
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+    .artifact-banner {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #cfe8e3;
+      background: var(--accent-soft);
+      color: var(--ink-soft);
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+    .context-details { margin-top: 10px; }
+    [hidden] { display: none !important; }
+
+    @media (max-width: 760px) {
+      .panel-intro { grid-template-columns: 1fr; }
+      .status-meta { text-align: left; }
+      .tab small { display: none; }
+    }
+    @media (max-width: 520px) {
+      body { padding: 14px 12px 32px; }
+      .tab-panel, .status-card, .outcome-card { padding: 16px; }
+      .row { grid-template-columns: 1fr; gap: 0; }
+      .cta-row { flex-direction: column; align-items: stretch; }
+      .cta-row button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
-<body>
-  <header><div><div class="eyebrow">Computer-use automation</div><h1>ActionReplay</h1><p class="muted">Discover a workflow. Save it once. Replay it.</p></div><span class="badge">Local workspace</span></header>
-  <main>
-    <section aria-labelledby="discovery-title">
-      <h2 id="discovery-title">New discovery</h2>
-      <p class="muted">Describe what you want done. The agent will find the steps in the application.</p>
-      <p id="model" class="notice">Connecting to the server…</p>
-      <form id="discovery-form" autocomplete="off">
-        <fieldset id="discovery-fields" disabled>
-          <div class="field"><label for="goal">Goal</label><textarea id="goal" name="goal" required>Find the savings balance for the supplied member</textarea></div>
-          <div class="field"><label for="target">Target URL</label><input id="target" name="target" type="url" required><small>Use an application allowed by the server policy.</small></div>
-          <div class="field"><label for="capability">Capability name</label><input id="capability" name="capability" value="savings-balance" pattern="[a-z][a-z0-9\-]*" required><small>Lowercase letters, numbers, and hyphens. For example: savings-balance.</small></div>
-          <div class="field"><label for="inputs">Inputs (JSON)</label><textarea id="inputs" name="inputs" spellcheck="false" aria-describedby="inputs-help">{
-  "member_id": "00123"
-}</textarea><small id="inputs-help">Named values for this run. Quote member IDs to preserve leading zeros. Use {} if no inputs are needed.</small></div>
-          <div class="row">
-            <div class="field"><label for="max-steps">Maximum steps</label><input id="max-steps" name="max_steps" type="number" min="1" step="1" required></div>
-            <div class="field"><label for="max-duration">Time limit (seconds)</label><input id="max-duration" name="max_duration_seconds" type="number" min="1" step="1" required></div>
-          </div>
-        </fieldset>
-        <p id="form-error" class="error" role="alert"></p>
-        <button id="start-discovery" type="submit" disabled>Start discovery</button>
-        <small>Only one run can be active. Goal and inputs are not saved in browser storage.</small>
-      </form>
-    </section>
-    <div>
-      <section aria-labelledby="status">
-        <div class="eyebrow">Live session</div><h2 id="status" aria-live="polite">Connecting…</h2>
-        <p id="reason" class="muted">Checking run status…</p>
-        <p id="connection-error" class="error" role="alert"></p>
-        <div id="handoff" hidden>
-          <p>Take control, resolve the issue in the existing Chromium window, then select Resume.</p>
-          <div class="actions"><button id="take" type="button">Take Control</button><button id="resume" type="button">Resume</button><button id="abort" class="danger" type="button">Abort</button></div>
-          <button id="dismiss" class="secondary" type="button">Dismiss native dialog</button>
-          <details><summary>Extend discovery budget</summary><small>For an exhausted budget, add both steps and time before resuming.</small>
-            <div class="row"><div class="field"><label for="steps">Additional steps</label><input id="steps" type="number" min="0" step="1" value="0"></div><div class="field"><label for="seconds">Additional seconds</label><input id="seconds" type="number" min="0" step="1" value="0"></div></div>
-          </details>
+<body data-owner="Ready" data-connected="false" data-tab="discover">
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand-row">
+        <h1 class="brand">ActionReplay</h1>
+        <p class="brand-sub">Discover once · replay without the model</p>
+      </div>
+      <span class="workspace-chip">Local workspace</span>
+    </header>
+
+    <section class="status-card" aria-labelledby="status">
+      <div class="status-top">
+        <div>
+          <p class="live-label"><span class="live-dot" aria-hidden="true"></span> Live session</p>
+          <h2 id="status" aria-live="polite">Connecting…</h2>
+          <p id="reason" class="muted">Checking run status…</p>
         </div>
+        <div class="status-meta" id="status-meta">
+          <strong>Mode</strong>
+          <span id="status-mode">Idle</span>
+        </div>
+      </div>
+      <p id="connection-error" class="error" role="alert"></p>
+      <div id="handoff" hidden>
+        <p>Automation paused. Take control of the same Chromium window, fix the issue, then resume.</p>
+        <p id="handoff-tip" class="muted" hidden></p>
+        <div class="handoff-actions actions">
+          <button id="take" type="button">Take Control</button>
+          <button id="resume" type="button">Resume</button>
+          <button id="abort" class="danger" type="button">Abort</button>
+          <button id="dismiss" class="secondary" type="button">Dismiss native dialog</button>
+        </div>
+        <details>
+          <summary>Extend discovery budget</summary>
+          <small>Needed when the step/time budget is exhausted. Add both values before Resume.</small>
+          <div class="row" style="margin-top:10px">
+            <div class="field"><label for="steps">Additional steps</label><input id="steps" type="number" min="0" step="1" value="0"></div>
+            <div class="field"><label for="seconds">Additional seconds</label><input id="seconds" type="number" min="0" step="1" value="0"></div>
+          </div>
+        </details>
         <p id="control-error" class="error" role="alert"></p>
-        <details><summary>Run context</summary><pre id="context">No run yet.</pre></details>
+      </div>
+      <details class="context-details"><summary>Run context</summary><pre id="context">No run yet.</pre></details>
+    </section>
+
+    <section class="workflow" aria-label="Workflow">
+      <div class="tabs" role="tablist" aria-label="Choose workflow">
+        <button type="button" class="tab" role="tab" id="tab-discover" aria-selected="true" aria-controls="panel-discover">
+          Discover
+          <small>LLM finds the steps</small>
+        </button>
+        <button type="button" class="tab" role="tab" id="tab-replay" aria-selected="false" aria-controls="panel-replay">
+          Replay
+          <small>No model required</small>
+        </button>
+      </div>
+
+      <div class="tab-panel active" role="tabpanel" id="panel-discover" aria-labelledby="tab-discover">
+        <div class="panel-intro">
+          <div>
+            <h2 id="discovery-title">New discovery</h2>
+            <p>Describe the goal. The agent explores the allowed app and saves a reusable capability.</p>
+          </div>
+          <div class="helper-card"><p id="model" class="notice">Connecting to the server…</p></div>
+        </div>
+        <form id="discovery-form" class="form-grid" autocomplete="off">
+          <fieldset id="discovery-fields" disabled>
+            <div class="field">
+              <label for="goal-preset">Goal preset</label>
+              <select id="goal-preset">
+                <option value="savings">Savings balance (easy)</option>
+                <option value="subaccount">Sub-account review</option>
+                <option value="transfer">Transfer funds (needs human verify)</option>
+                <option value="create">Create member (needs human verify)</option>
+                <option value="delete">Delete member (needs human verify)</option>
+              </select>
+              <small>Harder goals pause for staff verification; irreversible confirms stay blocked.</small>
+            </div>
+            <div class="field"><label for="goal">Goal</label><textarea id="goal" name="goal" required>Find the savings balance for the supplied member</textarea></div>
+            <div class="row">
+              <div class="field"><label for="target">Target URL</label><input id="target" name="target" type="url" required><small>Must match the server allowlist.</small></div>
+              <div class="field"><label for="capability">Capability name</label><input id="capability" name="capability" value="savings-balance" pattern="[a-z][a-z0-9\-]*" required><small>e.g. savings-balance</small></div>
+            </div>
+            <div class="field"><label for="inputs">Inputs (JSON)</label><textarea id="inputs" name="inputs" spellcheck="false" aria-describedby="inputs-help">{
+  "member_id": "00123"
+}</textarea><small id="inputs-help">Quote member IDs to keep leading zeros. Use {} if none.</small></div>
+            <details class="advanced">
+              <summary>Limits &amp; budget</summary>
+              <div class="row">
+                <div class="field"><label for="max-steps">Maximum steps</label><input id="max-steps" name="max_steps" type="number" min="1" step="1" required></div>
+                <div class="field"><label for="max-duration">Time limit (seconds)</label><input id="max-duration" name="max_duration_seconds" type="number" min="1" step="1" required></div>
+              </div>
+            </details>
+          </fieldset>
+          <p id="form-error" class="error" role="alert"></p>
+          <div class="cta-row">
+            <button id="start-discovery" type="submit" disabled>Start discovery</button>
+            <small>One run at a time. Nothing is stored in the browser.</small>
+          </div>
+        </form>
+      </div>
+
+      <div class="tab-panel" role="tabpanel" id="panel-replay" aria-labelledby="tab-replay" hidden>
+        <div class="panel-intro">
+          <div>
+            <h2 id="replay-title">Replay capability</h2>
+            <p>Re-run a saved artifact deterministically. Intervention still uses this live session.</p>
+          </div>
+          <div class="helper-card">No OpenRouter key needed for replay. Pick a recorded capability or the offline fixture.</div>
+        </div>
+        <form id="replay-form" class="form-grid" autocomplete="off">
+          <fieldset id="replay-fields" disabled>
+            <div class="row">
+              <div class="field">
+                <label for="replay-capability">Capability</label>
+                <select id="replay-capability" required></select>
+                <small id="replay-empty" hidden>No capabilities yet — discover one first.</small>
+              </div>
+              <div class="field">
+                <label for="replay-revision">Revision</label>
+                <select id="replay-revision" required></select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="replay-inputs">Inputs (JSON)</label>
+              <textarea id="replay-inputs" spellcheck="false">{
+  "member_id": "00678"
+}</textarea>
+              <small id="replay-desc">Choose a capability to load its input contract.</small>
+            </div>
+          </fieldset>
+          <p id="replay-error" class="error" role="alert"></p>
+          <div class="cta-row">
+            <button id="start-replay" type="submit" disabled>Start replay</button>
+            <button id="refresh-capabilities" class="secondary" type="button">Refresh list</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <div class="outcome-stack">
+      <section id="result-section" class="outcome-card" hidden aria-labelledby="result-title">
+        <h2 id="result-title">Run result</h2>
+        <p id="result-summary"></p>
+        <pre id="outputs"></pre>
+        <p id="artifact-location" class="artifact-banner" hidden></p>
+        <small>Logs: runs/&lt;run-id&gt;/ on the server.</small>
       </section>
-      <section id="result-section" hidden aria-labelledby="result-title"><h2 id="result-title">Discovery result</h2><p id="result-summary"></p><pre id="outputs"></pre><p id="artifact-location" class="notice" hidden></p><small>Run logs are saved on the server under runs/&lt;run-id&gt;/.</small></section>
-      <section id="evidence-section" hidden><h2>Intervention evidence</h2><details><summary>Sanitized UI snapshot</summary><pre id="snapshot"></pre></details></section>
+      <section id="evidence-section" class="outcome-card" hidden>
+        <h2>Intervention evidence</h2>
+        <details open><summary>Sanitized UI snapshot</summary><pre id="snapshot"></pre></details>
+      </section>
     </div>
-  </main>
+  </div>
   <script>
     const $ = id => document.getElementById(id);
     let state = {}, settings = null, submitting = false, connected = false, controlPending = false;
-    let launchedRun = null, shownResult = null, polling = false;
+    let launchedRun = null, shownResult = null, polling = false, catalog = [], selectedArtifact = null, launchedMode = null;
+
+    const GOAL_PRESETS = {
+      savings: {
+        goal: 'Find the savings balance for the supplied member',
+        capability: 'savings-balance',
+        inputs: '{\n  "member_id": "00123"\n}',
+      },
+      subaccount: {
+        goal: 'Prepare a sub-account for the supplied member using account_type and nickname. Stop at review and return the displayed nickname. Do not confirm creation.',
+        capability: 'subaccount-review',
+        inputs: '{\n  "member_id": "00123",\n  "account_type": "Savings",\n  "nickname": "Vacation"\n}',
+      },
+      transfer: {
+        goal: 'Prepare a funds transfer for the supplied member using from_account and amount. After staff verification, stop on the transfer review screen and return the displayed amount. Do not confirm the transfer.',
+        capability: 'transfer-review',
+        inputs: '{\n  "member_id": "00123",\n  "from_account": "Savings",\n  "amount": "25.00"\n}',
+      },
+      create: {
+        goal: 'Prepare creating a new member using new_member_id and display_name. After staff verification, stop on the create-member review screen and return the displayed new member ID. Do not confirm create.',
+        capability: 'create-member-review',
+        inputs: '{\n  "new_member_id": "00456",\n  "display_name": "Alex Rivera"\n}',
+      },
+      delete: {
+        goal: 'Prepare deleting the supplied member. After staff verification, stop on the delete-member review screen and return the displayed member ID. Do not confirm delete.',
+        capability: 'delete-member-review',
+        inputs: '{\n  "member_id": "00123"\n}',
+      },
+    };
+
+    function applyGoalPreset() {
+      const preset = GOAL_PRESETS[$('goal-preset').value];
+      if (!preset) return;
+      $('goal').value = preset.goal;
+      $('capability').value = preset.capability;
+      $('inputs').value = preset.inputs;
+    }
+
+    $('goal-preset').addEventListener('change', applyGoalPreset);
+
+    function syncChrome() {
+      document.body.dataset.connected = connected ? "true" : "false";
+      document.body.dataset.owner = state.owner || (connected ? "Ready" : "Connecting");
+      const mode = state.mode || launchedMode;
+      $('status-mode').textContent = state.state === 'running'
+        ? (mode === 'replay' ? 'Replay in progress' : 'Discovery in progress')
+        : state.result
+          ? `${(state.result.status || 'done').replaceAll('_', ' ')}`
+          : 'Idle';
+    }
+
+    function showTab(name) {
+      const discover = name === 'discover';
+      document.body.dataset.tab = name;
+      $('tab-discover').setAttribute('aria-selected', discover ? 'true' : 'false');
+      $('tab-replay').setAttribute('aria-selected', discover ? 'false' : 'true');
+      $('panel-discover').classList.toggle('active', discover);
+      $('panel-replay').classList.toggle('active', !discover);
+      $('panel-discover').hidden = !discover;
+      $('panel-replay').hidden = discover;
+    }
+
     async function api(path, options = {}) {
       const response = await fetch(path, {...options, headers: {'Content-Type': 'application/json'}});
       let body;
@@ -95,87 +619,229 @@
       }
       return body;
     }
+
+    function parseInputs(raw, errorNode) {
+      let inputs;
+      try { inputs = JSON.parse(raw || '{}'); }
+      catch { errorNode.textContent = 'Inputs must be valid JSON, for example {"member_id": "00123"}.'; return null; }
+      if (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)) {
+        errorNode.textContent = 'Inputs must be a JSON object with named values.'; return null;
+      }
+      if (Object.values(inputs).some(value => !['string', 'number', 'boolean'].includes(typeof value) || (typeof value === 'number' && !Number.isSafeInteger(value)))) {
+        errorNode.textContent = 'Input values must be strings, integers, or booleans. Quote decimal amounts.'; return null;
+      }
+      return inputs;
+    }
+
     function updateControls() {
       const running = state.state === 'running';
-      $('discovery-fields').disabled = !settings || !connected || running || submitting;
-      $('start-discovery').disabled = !settings?.model_configured || !connected || running || submitting;
-      $('start-discovery').textContent = submitting ? 'Starting…' : running ? 'Run in progress' : 'Start discovery';
+      const busy = !settings || !connected || running || submitting;
+      $('discovery-fields').disabled = busy;
+      $('start-discovery').disabled = !settings?.model_configured || busy;
+      $('start-discovery').textContent = submitting && launchedMode === 'discovery' ? 'Starting…' : running ? 'Run in progress' : 'Start discovery';
+      $('replay-fields').disabled = busy || !catalog.length;
+      $('start-replay').disabled = busy || !catalog.length || !selectedArtifact;
+      $('start-replay').textContent = submitting && launchedMode === 'replay' ? 'Starting…' : running ? 'Run in progress' : 'Start replay';
+      $('refresh-capabilities').disabled = submitting || running;
+      $('tab-discover').disabled = submitting;
+      $('tab-replay').disabled = submitting;
       $('take').disabled = controlPending || !state.intervention || state.owner !== 'PAUSED';
       $('resume').disabled = controlPending || state.owner !== 'HUMAN';
       $('abort').disabled = controlPending || !state.intervention;
       $('dismiss').disabled = controlPending || state.owner !== 'HUMAN';
+      syncChrome();
     }
+
+    function fillRevisions(entry) {
+      const select = $('replay-revision');
+      select.innerHTML = '';
+      for (const revision of entry.revisions) {
+        const option = document.createElement('option');
+        option.value = String(revision);
+        option.textContent = entry.kind === 'fixture' ? 'fixture' : `revision ${revision}`;
+        select.appendChild(option);
+      }
+      select.value = String(entry.revisions[entry.revisions.length - 1]);
+    }
+
+    async function loadSelectedArtifact() {
+      selectedArtifact = null;
+      const capabilityId = $('replay-capability').value;
+      const revision = Number($('replay-revision').value);
+      if (!capabilityId || !Number.isSafeInteger(revision)) return;
+      const payload = await api(`/capabilities/${encodeURIComponent(capabilityId)}/${revision}`);
+      selectedArtifact = payload.artifact;
+      $('replay-desc').textContent = payload.description || 'Saved capability ready for deterministic replay.';
+      const template = {};
+      for (const name of payload.input_names || []) template[name] = '';
+      if (payload.input_names?.includes('member_id')) template.member_id = '00678';
+      $('replay-inputs').value = JSON.stringify(template, null, 2);
+      updateControls();
+    }
+
+    async function loadCapabilities(preferId) {
+      const data = await api('/capabilities');
+      catalog = data.capabilities || [];
+      const select = $('replay-capability');
+      const previous = preferId || select.value;
+      select.innerHTML = '';
+      for (const entry of catalog) {
+        const option = document.createElement('option');
+        option.value = entry.capability_id;
+        option.textContent = entry.kind === 'fixture'
+          ? `${entry.capability_id} (fixture)`
+          : `${entry.capability_id} (${entry.revisions.length} rev)`;
+        select.appendChild(option);
+      }
+      $('replay-empty').hidden = catalog.length > 0;
+      if (!catalog.length) {
+        selectedArtifact = null;
+        $('replay-revision').innerHTML = '';
+        updateControls();
+        return;
+      }
+      select.value = catalog.some(entry => entry.capability_id === previous) ? previous : catalog[0].capability_id;
+      const entry = catalog.find(item => item.capability_id === select.value);
+      fillRevisions(entry);
+      await loadSelectedArtifact();
+    }
+
     async function loadSettings() {
       settings = await api('/settings');
       $('target').value = settings.target;
       $('max-steps').value = settings.max_steps;
       $('max-duration').value = settings.max_duration_seconds;
       $('model').textContent = settings.model_configured
-        ? `Discovery model: ${settings.model}`
-        : 'Load OPENROUTER_API_KEY and OPENROUTER_MODEL into the server environment, then restart the server to enable discovery.';
+        ? `Model ready: ${settings.model}`
+        : 'Set OPENROUTER_API_KEY and OPENROUTER_MODEL on the server to enable discovery. Replay still works.';
     }
+
     async function refresh() {
       if (polling) return;
       polling = true;
       try {
         if (!settings) await loadSettings();
+        if (!catalog.length) await loadCapabilities();
         state = await api('/state'); connected = true;
         $('connection-error').textContent = '';
         $('status').textContent = state.owner || 'Ready';
         $('reason').textContent = state.intervention?.reason || (state.state === 'running'
-          ? 'The agent is working in Chromium. You can watch the browser window.'
-          : state.result ? `Run ${state.result.status.replaceAll('_', ' ')}: ${state.result.code}` : 'Enter a goal and start discovery.');
+          ? `${state.mode === 'replay' ? 'Replay' : 'Discovery'} is driving Chromium — watch that window.`
+          : state.result ? `Last run ${state.result.status.replaceAll('_', ' ')}: ${state.result.code}` : 'Pick Discover or Replay below to start.');
         $('context').textContent = state.run_id ? JSON.stringify(state, null, 2) : 'No run yet.';
         $('handoff').hidden = !state.intervention;
+        const tip = $('handoff-tip');
+        if (state.intervention?.reason === 'NO_PROGRESS') {
+          tip.hidden = false;
+          tip.textContent = 'For review-only goals: do not click Confirm. Leave the review screen showing the nickname/amount, then Resume so the agent can extract and finish.';
+        } else if (state.intervention?.reason === 'POLICY_RISKY_CONTROL') {
+          tip.hidden = false;
+          tip.textContent = 'That control is blocked on purpose. Prefer extract + finish on the review screen, or complete staff verification only.';
+        } else if (state.intervention?.reason === 'INCOMPATIBLE_RESUME_STATE' || false) {
+          tip.hidden = false;
+        } else {
+          tip.hidden = true;
+          tip.textContent = '';
+        }
         $('evidence-section').hidden = !state.intervention;
         if (state.intervention) $('snapshot').textContent = JSON.stringify(await api('/snapshot'), null, 2);
         else $('snapshot').textContent = '';
-        // Actual outputs only for a run launched from this page, held in memory.
         if (state.result && state.run_id === launchedRun && shownResult !== launchedRun) {
           const run = await api(`/runs/${encodeURIComponent(launchedRun)}`);
           $('result-section').hidden = false;
-          $('result-summary').textContent = run.result.status === 'success' ? 'Discovery completed. Your capability has been saved.' : `${run.result.status.replaceAll('_', ' ')}: ${run.result.code}`;
+          const mode = run.mode || launchedMode || 'run';
+          if (run.result.status === 'success') {
+            $('result-summary').textContent = mode === 'discovery'
+              ? 'Discovery completed. Capability saved — switch to Replay to try new inputs.'
+              : 'Replay completed without the LLM.';
+          } else {
+            $('result-summary').textContent = `${run.result.status.replaceAll('_', ' ')}: ${run.result.code}`;
+          }
           $('outputs').textContent = JSON.stringify(run.result.outputs, null, 2);
-          $('artifact-location').hidden = run.result.status !== 'success';
-          $('artifact-location').textContent = `Capability revisions: capabilities/${run.capability_id}/ · Exact artifact for this run: runs/${run.run_id}/capability.json`;
+          $('artifact-location').hidden = !(mode === 'discovery' && run.result.status === 'success');
+          $('artifact-location').textContent = `Saved under capabilities/${run.capability_id}/ · run copy: runs/${run.run_id}/capability.json`;
           shownResult = launchedRun;
+          if (mode === 'discovery' && run.result.status === 'success') {
+            await loadCapabilities(run.capability_id);
+            showTab('replay');
+          }
         }
       } catch (error) {
         connected = false;
         $('connection-error').textContent = error.message;
       } finally { polling = false; updateControls(); }
     }
+
+    async function startRun(payload, errorNode, mode) {
+      submitting = true; launchedMode = mode; updateControls();
+      try {
+        const run = await api('/runs', {method:'POST', body:JSON.stringify(payload)});
+        launchedRun = run.run_id; shownResult = null;
+        $('result-section').hidden = true; $('outputs').textContent = ''; $('artifact-location').textContent = '';
+        state = {state:'running', run_id:run.run_id, owner:'AUTOMATION', mode};
+        $('status').textContent = 'AUTOMATION';
+        $('reason').textContent = mode === 'replay'
+          ? 'Replay started. Opening the application in Chromium…'
+          : 'Discovery started. Opening the application in Chromium…';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        await refresh();
+      } catch (error) { errorNode.textContent = error.message; }
+      finally { submitting = false; updateControls(); }
+    }
+
+    $('tab-discover').addEventListener('click', () => showTab('discover'));
+    $('tab-replay').addEventListener('click', () => showTab('replay'));
+
     $('discovery-form').addEventListener('submit', async event => {
       event.preventDefault();
       if (submitting || state.state === 'running' || !connected || !settings?.model_configured) return;
       $('form-error').textContent = '';
-      let inputs;
-      try { inputs = JSON.parse($('inputs').value || '{}'); }
-      catch { $('form-error').textContent = 'Inputs must be valid JSON, for example {"member_id": "00123"}.'; return; }
-      if (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)) {
-        $('form-error').textContent = 'Inputs must be a JSON object with named values.'; return;
-      }
-      if (Object.values(inputs).some(value => !['string', 'number', 'boolean'].includes(typeof value) || (typeof value === 'number' && !Number.isSafeInteger(value)))) {
-        $('form-error').textContent = 'Input values must be strings, integers, or booleans. Quote decimal amounts.'; return;
-      }
+      const inputs = parseInputs($('inputs').value, $('form-error'));
+      if (!inputs) return;
       const goal = $('goal').value.trim();
       if (!goal) { $('form-error').textContent = 'Enter a goal for the agent.'; return; }
       const maxSteps = Number($('max-steps').value), maxDuration = Number($('max-duration').value);
       if (!Number.isSafeInteger(maxSteps) || maxSteps < 1 || !Number.isSafeInteger(maxDuration) || maxDuration < 1) {
         $('form-error').textContent = 'Step and time limits must be positive whole numbers.'; return;
       }
-      const payload = {mode:'discovery', goal, target:$('target').value.trim(), inputs, capability_name:$('capability').value.trim(), max_steps:maxSteps, max_duration_seconds:maxDuration};
-      submitting = true; updateControls();
-      try {
-        const run = await api('/runs', {method:'POST', body:JSON.stringify(payload)});
-        launchedRun = run.run_id; shownResult = null;
-        $('result-section').hidden = true; $('outputs').textContent = ''; $('artifact-location').textContent = '';
-        state = {state:'running', run_id:run.run_id, owner:'AUTOMATION'};
-        $('status').textContent = 'AUTOMATION'; $('reason').textContent = 'Discovery started. Opening the application in Chromium…';
-        await refresh();
-      } catch (error) { $('form-error').textContent = error.message; }
-      finally { submitting = false; updateControls(); }
+      await startRun({
+        mode:'discovery',
+        goal,
+        target:$('target').value.trim(),
+        inputs,
+        capability_name:$('capability').value.trim(),
+        max_steps:maxSteps,
+        max_duration_seconds:maxDuration
+      }, $('form-error'), 'discovery');
     });
+
+    $('replay-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (submitting || state.state === 'running' || !connected || !selectedArtifact) return;
+      $('replay-error').textContent = '';
+      const inputs = parseInputs($('replay-inputs').value, $('replay-error'));
+      if (!inputs) return;
+      await startRun({mode:'replay', inputs, artifact:selectedArtifact}, $('replay-error'), 'replay');
+    });
+
+    $('replay-capability').addEventListener('change', async () => {
+      const entry = catalog.find(item => item.capability_id === $('replay-capability').value);
+      if (!entry) return;
+      fillRevisions(entry);
+      try { await loadSelectedArtifact(); $('replay-error').textContent = ''; }
+      catch (error) { $('replay-error').textContent = error.message; selectedArtifact = null; updateControls(); }
+    });
+    $('replay-revision').addEventListener('change', async () => {
+      try { await loadSelectedArtifact(); $('replay-error').textContent = ''; }
+      catch (error) { $('replay-error').textContent = error.message; selectedArtifact = null; updateControls(); }
+    });
+    $('refresh-capabilities').addEventListener('click', async () => {
+      try {
+        await loadCapabilities($('replay-capability').value);
+        $('replay-error').textContent = '';
+      } catch (error) { $('replay-error').textContent = error.message; }
+    });
+
     async function control(action) {
       if (controlPending || !state.intervention) return;
       const steps = Number($('steps').value), seconds = Number($('seconds').value);
@@ -189,7 +855,9 @@
       } catch (error) { $('control-error').textContent = error.message; }
       finally { controlPending = false; updateControls(); }
     }
-    for (const [id, action] of [['take','take'],['resume','resume'],['abort','abort'],['dismiss','dismiss_dialog']]) $(id).addEventListener('click', () => control(action));
+    for (const [id, action] of [['take','take'],['resume','resume'],['abort','abort'],['dismiss','dismiss_dialog']]) {
+      $(id).addEventListener('click', () => control(action));
+    }
     async function poll() { await refresh(); setTimeout(poll, 1000); }
     poll();
   </script>

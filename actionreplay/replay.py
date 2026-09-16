@@ -19,11 +19,12 @@ class TerminalOutcome(Exception):
 
 
 class ReplayEngine:
-    def __init__(self, config, surface, evidence, controller):
+    def __init__(self, config, surface, evidence, controller, assist=None):
         self.config = config
         self.surface = surface
         self.evidence = evidence
         self.controller = controller
+        self.assist = assist
         self.variables = {}
         self.recoveries = {}
         self.step_id = None
@@ -148,6 +149,24 @@ class ReplayEngine:
                     continue
                 if code in {"HANDOFF_TIMEOUT", "OPERATOR_ABORTED", "RECOVERY_EXHAUSTED"}:
                     raise
+                # Bounded optional LLM assist (stretch): one policy-checked action, then retry.
+                if (
+                    self.assist
+                    and code
+                    in {
+                        "TARGET_NOT_FOUND",
+                        "PRECONDITION_FAILED",
+                        "POSTCONDITION_FAILED",
+                        "ACTION_TIMEOUT",
+                    }
+                    and await self.assist.try_recover(step, capability, inputs, self.variables)
+                ):
+                    if step.postconditions and await self.conditions(
+                        step.postconditions, capability, inputs
+                    ):
+                        self.evidence.event("step_completed_by_assist", step_id=step.id)
+                        return
+                    continue
                 snapshot = self.evidence.snapshot(await self.surface.capture_sanitized_evidence())
                 self.evidence.event("action_blocked", step_id=step.id, code=code, evidence=snapshot)
 

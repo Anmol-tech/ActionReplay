@@ -10,7 +10,7 @@ from actionreplay.policy import AutomationError
 from actionreplay.replay import ReplayEngine
 from actionreplay.session import SessionController
 from actionreplay.surface import BrowserSurface
-from tests.helpers import balance_capability
+from tests.helpers import balance_capability, transfer_review_capability
 
 
 async def runtime(tmp_path, url):
@@ -108,6 +108,64 @@ async def test_handoff_same_session(tmp_path, mock_server, scenario, manual_labe
         await surface.close()
 
 
+async def test_staff_verification_handoff(tmp_path, mock_server):
+    config, evidence, controller, surface = await runtime(tmp_path, mock_server("normal"))
+    try:
+        task = asyncio.create_task(
+            ReplayEngine(config, surface, evidence, controller).run(
+                transfer_review_capability(), {"member_id": "00123"}
+            )
+        )
+        intervention = await wait_intervention(controller)
+        assert intervention.reason == "STAFF_VERIFICATION_REQUIRED"
+        controller.take_control(intervention.id)
+        frame = surface.page.frame(name="workspace")
+        await frame.get_by_role("link", name="Verify staff authorization").click()
+        controller.resume(intervention.id)
+        result = await task
+        assert (result.status, result.code) == ("success", "OK"), result
+        assert result.outputs["amount"] == "25.00"
+    finally:
+        await surface.close()
+
+
+async def test_assisted_fallback_on_drift(tmp_path, mock_server):
+    class ScriptedAssist:
+        def __init__(self, surface):
+            self.surface = surface
+            self.calls = 0
+
+        async def try_recover(self, step, capability, inputs, variables):
+            self.calls += 1
+            frame = self.surface.page.frame(name="workspace")
+            await frame.get_by_role("button", name="Continue to review").click()
+            await frame.get_by_role("heading", name="Transfer review").wait_for()
+            return True
+
+    config, evidence, controller, surface = await runtime(tmp_path, mock_server("drift"))
+    assist = ScriptedAssist(surface)
+    try:
+        task = asyncio.create_task(
+            ReplayEngine(config, surface, evidence, controller, assist=assist).run(
+                transfer_review_capability(), {"member_id": "00123"}
+            )
+        )
+        intervention = await wait_intervention(controller)
+        assert intervention.reason == "STAFF_VERIFICATION_REQUIRED"
+        controller.take_control(intervention.id)
+        frame = surface.page.frame(name="workspace")
+        await frame.get_by_role("link", name="Verify staff authorization").click()
+        controller.resume(intervention.id)
+        result = await task
+        assert (result.status, result.code) == ("success", "OK"), result
+        assert assist.calls == 1
+        assert result.outputs["amount"] == "25.00"
+        events = (evidence.path / "events.jsonl").read_text()
+        assert "step_completed_by_assist" in events
+    finally:
+        await surface.close()
+
+
 async def test_observation_and_ambiguous_target(tmp_path, mock_server):
     config, evidence, controller, surface = await runtime(tmp_path, mock_server())
     try:
@@ -142,6 +200,7 @@ async def test_api_auth_and_transitions(tmp_path, monkeypatch):
         page = await client.get("/")
         assert page.status_code == 200
         assert "New discovery" in page.text
+        assert "Replay capability" in page.text
         assert "synthetic-test-key" not in page.text
         assert (await client.get("/state")).status_code == 200
         settings = await client.get("/settings")
@@ -153,6 +212,12 @@ async def test_api_auth_and_transitions(tmp_path, monkeypatch):
             "model_configured": True,
         }
         assert "synthetic-test-key" not in settings.text
+        catalog = await client.get("/capabilities")
+        assert catalog.status_code == 200
+        assert any(item["capability_id"] == "offline-balance" for item in catalog.json()["capabilities"])
+        artifact = await client.get("/capabilities/offline-balance/1")
+        assert artifact.status_code == 200
+        assert artifact.json()["artifact"]["capability_id"] == "offline-balance"
         assert (
             await client.get(
                 "/state", headers={"Origin": "https://evil.example"}

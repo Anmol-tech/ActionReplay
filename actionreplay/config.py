@@ -16,6 +16,10 @@ class DiscoveryConfig(Model):
 class ExecutionConfig(Model):
     action_timeout_seconds: float = Field(default=10, gt=0)
     max_recovery_attempts: int = Field(default=2, ge=0)
+    # Bounded OpenRouter single-step recovery on replay UI drift (stretch goal). Off by default
+    # so replay stays model-free unless explicitly enabled with OpenRouter credentials.
+    assisted_fallback: bool = False
+    assisted_fallback_max_per_run: int = Field(default=1, ge=0, le=3)
 
 
 class HandoffConfig(Model):
@@ -40,6 +44,13 @@ class PolicyConfig(Model):
         "/review",
         "/restore",
         "/continue",
+        "/verify",
+        "/transfer",
+        "/transfer-review",
+        "/create-member",
+        "/create-review",
+        "/delete-member",
+        "/delete-confirm",
     ]
     allowed_actions: list[str] = [
         "navigate",
@@ -53,6 +64,7 @@ class PolicyConfig(Model):
         "extract",
     ]
     # Only these visible control identities may cause clicks. Unknown controls fail closed.
+    # Irreversible confirms (Confirm transfer/create/delete/creation) are intentionally omitted.
     safe_click_labels: list[str] = [
         "Search",
         "Open member",
@@ -62,6 +74,13 @@ class PolicyConfig(Model):
         "Review",
         "Back",
         "Continue",
+        "Transfer funds",
+        "Create member",
+        "Delete member",
+        "Review transfer",
+        "Continue to review",
+        "Review create",
+        "Review delete",
     ]
     safe_field_names: list[str] = [
         "Member ID",
@@ -70,6 +89,16 @@ class PolicyConfig(Model):
         "member_id",
         "account_type",
         "nickname",
+        "Amount",
+        "amount",
+        "From account",
+        "from_account",
+        "To account",
+        "to_account",
+        "New member ID",
+        "new_member_id",
+        "Display name",
+        "display_name",
     ]
     approved_literals: list[str] = [
         "Savings",
@@ -92,11 +121,47 @@ class PolicyConfig(Model):
         "Nickname:",
         "Member servicing",
         "Search results",
+        "Transfer funds",
+        "Transfer review",
+        "Create member",
+        "Create member review",
+        "Delete member",
+        "Delete member review",
+        "Staff verification required",
+        "From account",
+        "From account:",
+        "To account",
+        "To account:",
+        "Amount:",
+        "New member ID",
+        "New member ID:",
+        "Display name",
+        "Display name:",
+        "Review transfer",
+        "Continue to review",
+        "Review create",
+        "Review delete",
+        "Verify staff authorization",
+        "Confirmation reference",
+        "Insufficient funds",
+        "Invalid account combination",
+        "Member already exists",
     ]
     approved_attributes: dict[str, list[str]] = {
-        "name": ["shell", "workspace", "member_id", "account_type", "nickname"],
+        "name": [
+            "shell",
+            "workspace",
+            "member_id",
+            "account_type",
+            "nickname",
+            "amount",
+            "from_account",
+            "to_account",
+            "new_member_id",
+            "display_name",
+        ],
         "title": ["Bank shell", "Workspace"],
-        "id": ["member", "nickname"],
+        "id": ["member", "nickname", "amount", "new_member_id", "display_name"],
         "placeholder": [],
     }
 
@@ -111,9 +176,9 @@ class Config(Model):
     application_version: str = "1.0"
     startup_text: str = "LegacyBank 1.0 — Staff workspace"
     headless: bool = False
-    scenario: Literal["normal", "permission", "session", "slow", "transient", "interstitial", "dialog"] = (
-        "normal"
-    )
+    scenario: Literal[
+        "normal", "permission", "session", "slow", "transient", "interstitial", "dialog", "drift"
+    ] = ("normal")
 
 
 def load_config(path: str | None = None, **overrides) -> Config:

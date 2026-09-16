@@ -90,6 +90,9 @@ class SessionController:
         self._check_id(intervention_id)
         if self.owner != "PAUSED":
             raise AutomationError("INVALID_CONTROL_TRANSITION")
+        # Drop abort residue from blocked human navigations (e.g. Confirm → /commit).
+        if self.surface is not None:
+            self.surface.blocked = None
         self.transition("HUMAN")
 
     def resume(self, intervention_id, steps=0, seconds=0):

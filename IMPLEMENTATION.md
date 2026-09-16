@@ -5,7 +5,7 @@ This preserves the agreed scope and distinguishes implementation from live verif
 | Agreed subsystem | Implementation and verification |
 |---|---|
 | Python stack and reproducible setup | pyproject.toml, uv.lock, package CLI; installation and process-level smoke test pass. |
-| Local legacy app | Nested frames, tables, unlabeled select, synthetic member/account/form screens; both workflows traversed in Chromium. |
+| Local legacy app | Nested frames, tables, unlabeled select, synthetic member/account/form screens; transfer/create/delete with staff verification and irreversible confirms; both easy and hard workflows traversed in Chromium. |
 | No business API discovery | Screenshots/rendered controls and fixed browser tools only; hidden-content exclusion test. No production task scripts. |
 | Real model discovery | OpenRouter image/tool preflight and validated tool-call adapter; protocol tested with mocked HTTP. **Genuine provider discovery exported under `/evidence/` (live provenance).** |
 | Generic discovery loop | Fresh observations, action validation, runtime outcomes, no-progress detection; offline model doubles exercise two live UI workflows. |
@@ -13,7 +13,7 @@ This preserves the agreed scope and distinguishes implementation from live verif
 | Typed replay schema | Pydantic discriminated union and exported JSON Schema; round-trip, version/action/field, reference, ordering, and contract validation. |
 | Parameterized recording | Input/literal/variable bindings and stable frame-scoped targets; recorded artifacts replay with different member and form inputs. |
 | Immutable artifact storage | Exclusive revisions, exact run copies, canonical SHA-256; overwrite and hash verification tests. |
-| Deterministic interpreter | No discovery/model imports; actions, conversions, checkpoints; model access disabled during replay tests. |
+| Deterministic interpreter | No discovery/model imports in replay.py; optional AssistedFallback injected by the server; actions, conversions, checkpoints; model access disabled during default replay tests. |
 | Business outcomes | Explicit not-found, invalid member/nickname, and missing-account detectors; not-found and invalid-member paths tested. |
 | Recoverable conditions | Bounded safe waits/retries and known handlers; slow, transient, interstitial, and zero-recovery tests. |
 | Hard failures and targeting | Permission failure, incompatible app/version, unique targeting; denied access, startup mismatch, and duplicate-control tests. |
@@ -36,7 +36,7 @@ Live OpenRouter discovery, alternate-input replay, and a not-found business outc
 
 ## Deliberate limits retained from the plan
 
-One local run/operator, synthetic data, file storage; no remote streaming, desktop implementation, distributed workers, tenant plumbing, polished dashboard, universal PII classifier, automatic artifact repair, or LLM-assisted replay. A new target requires an explicitly adapted trusted UI profile. A bank deployment additionally requires review of model-visible data, control semantics, authentication, and operator identity.
+One local run/operator, synthetic data, file storage; no remote streaming, desktop implementation, distributed workers, tenant plumbing, polished dashboard, universal PII classifier, or automatic artifact repair. Bounded LLM-assisted replay (`assisted_fallback`, max one policy-checked step) is optional stretch recovery for UI drift — not open-ended re-discovery. A new target requires an explicitly adapted trusted UI profile. A bank deployment additionally requires review of model-visible data, control semantics, authentication, and operator identity.
 
 ## Verified commands
 

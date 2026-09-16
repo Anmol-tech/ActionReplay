@@ -82,9 +82,12 @@ async def test_cli_operator_smoke(tmp_path):
                 await page.goto(url)
                 await page.get_by_role("heading", name="FINISHED", exact=True).wait_for()
                 assert await page.get_by_role("heading", name="New discovery").is_visible()
-                assert await page.get_by_label("Goal").input_value() == (
+                assert await page.get_by_role("tab", name="Discover").is_visible()
+                assert await page.get_by_role("tab", name="Replay").is_visible()
+                assert await page.get_by_label("Goal", exact=True).input_value() == (
                     "Find the savings balance for the supplied member"
                 )
+                assert await page.get_by_label("Goal preset").input_value() == "savings"
                 assert await page.get_by_label("Target URL").input_value() == (
                     f"http://127.0.0.1:{mock_port}"
                 )
@@ -116,6 +119,19 @@ async def test_cli_operator_smoke(tmp_path):
                     "max_steps": 30,
                     "max_duration_seconds": 300,
                 }
+
+                submitted.clear()
+                await page.get_by_role("tab", name="Replay").click()
+                assert await page.get_by_role("heading", name="Replay capability").is_visible()
+                assert await page.get_by_role("button", name="Start replay").is_enabled()
+                assert "offline-balance" in await page.locator("#replay-capability").inner_text()
+                await page.locator("#replay-capability").select_option("offline-balance")
+                await asyncio.sleep(0.15)
+                await page.get_by_role("button", name="Start replay").click()
+                await asyncio.sleep(0.1)
+                assert submitted["mode"] == "replay"
+                assert submitted["inputs"] == {"member_id": "00678"}
+                assert submitted["artifact"]["capability_id"] == "offline-balance"
                 # QA-only screenshot of a synthetic run; never part of persisted run evidence.
                 await page.screenshot(path=str(tmp_path / "operator.png"), full_page=True)
                 await browser.close()

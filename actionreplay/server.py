@@ -95,6 +95,7 @@ class Coordinator:
 
     async def _run(self, request, config):
         client = None
+        assist = None
         phase = "browser_startup"
         try:
             if self.surface:
@@ -107,9 +108,21 @@ class Coordinator:
             self.evidence.event("browser_started")
             phase = request.mode
             if request.mode == "replay":
-                self.result = await ReplayEngine(config, self.surface, self.evidence, self.controller).run(
-                    request.artifact, request.inputs
-                )
+                if (
+                    config.execution.assisted_fallback
+                    and config.execution.assisted_fallback_max_per_run > 0
+                    and os.getenv("OPENROUTER_API_KEY")
+                    and os.getenv("OPENROUTER_MODEL")
+                ):
+                    from .assist import AssistedFallback
+                    from .discovery import OpenRouterClient
+
+                    client = OpenRouterClient()
+                    assist = AssistedFallback(config, self.surface, self.evidence, client)
+                    self.evidence.event("assisted_fallback_enabled", max_per_run=config.execution.assisted_fallback_max_per_run)
+                self.result = await ReplayEngine(
+                    config, self.surface, self.evidence, self.controller, assist=assist
+                ).run(request.artifact, request.inputs)
             else:
                 from .discovery import DiscoveryEngine, OpenRouterClient
 
@@ -144,7 +157,15 @@ class Coordinator:
             self.controller.owner = "FINISHED"
             if client:
                 await client.close()
-            # Keep the completed browser visible until the next run or server shutdown.
+            # Mid-run pauses keep Chromium open (they happen inside the engine).
+            # After a terminal result, close so headed replay does not leave windows around.
+            if self.surface:
+                if self.evidence:
+                    self.evidence.event("browser_closing")
+                await self.surface.close()
+                self.surface = None
+                if self.controller:
+                    self.controller.surface = None
 
     def state(self):
         if not self.evidence:
@@ -168,11 +189,63 @@ class Coordinator:
             await self.surface.close()
 
 
-OPERATOR_HTML = Path(__file__).with_name("operator.html").read_text()
+OPERATOR_HTML_PATH = Path(__file__).with_name("operator.html")
+CAPABILITY_ROOT = Path("capabilities")
+FIXTURE_CAPABILITIES = {
+    "offline-balance": Path("examples/offline-balance.json"),
+}
+
+
+def list_capability_catalog():
+    catalog = []
+    if CAPABILITY_ROOT.is_dir():
+        for folder in sorted(CAPABILITY_ROOT.iterdir()):
+            if not folder.is_dir() or not folder.name.replace("-", "").isalnum() or not folder.name[0].islower():
+                continue
+            revisions = sorted(int(path.stem) for path in folder.glob("*.json") if path.stem.isdigit())
+            if revisions:
+                catalog.append(
+                    {
+                        "capability_id": folder.name,
+                        "revisions": revisions,
+                        "kind": "recorded",
+                    }
+                )
+    for capability_id, path in sorted(FIXTURE_CAPABILITIES.items()):
+        if path.is_file():
+            catalog.append(
+                {
+                    "capability_id": capability_id,
+                    "revisions": [1],
+                    "kind": "fixture",
+                }
+            )
+    return catalog
+
+
+def load_capability_artifact(capability_id: str, revision: int) -> Capability:
+    if not capability_id or not capability_id[0].islower() or not all(
+        ch.isalnum() or ch == "-" for ch in capability_id
+    ):
+        raise HTTPException(404, "Unknown capability")
+    if capability_id in FIXTURE_CAPABILITIES and FIXTURE_CAPABILITIES[capability_id].is_file():
+        path = FIXTURE_CAPABILITIES[capability_id].resolve()
+    else:
+        path = (CAPABILITY_ROOT / capability_id / f"{revision}.json").resolve()
+        root = CAPABILITY_ROOT.resolve()
+        if root not in path.parents or not path.is_file():
+            raise HTTPException(404, "Unknown capability revision")
+    if not path.is_file():
+        raise HTTPException(404, "Unknown capability revision")
+    try:
+        return Capability.model_validate_json(path.read_text())
+    except Exception as exc:
+        raise HTTPException(422, "Invalid capability artifact") from exc
 
 
 def create_app(config: Config):
     coordinator = Coordinator(config)
+    operator_html = OPERATOR_HTML_PATH.read_text()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -199,7 +272,7 @@ def create_app(config: Config):
 
     @app.get("/", response_class=HTMLResponse)
     async def operator():
-        return OPERATOR_HTML
+        return operator_html
 
     @app.get("/settings")
     async def settings():
@@ -209,6 +282,19 @@ def create_app(config: Config):
             "max_duration_seconds": config.discovery.max_duration_seconds,
             "model": os.getenv("OPENROUTER_MODEL") or None,
             "model_configured": bool(os.getenv("OPENROUTER_API_KEY") and os.getenv("OPENROUTER_MODEL")),
+        }
+
+    @app.get("/capabilities")
+    async def capabilities():
+        return {"capabilities": list_capability_catalog()}
+
+    @app.get("/capabilities/{capability_id}/{revision}")
+    async def capability(capability_id: str, revision: int):
+        artifact = load_capability_artifact(capability_id, revision)
+        return {
+            "artifact": artifact.model_dump(mode="json"),
+            "input_names": sorted(artifact.inputs),
+            "description": artifact.description,
         }
 
     @app.post("/runs")

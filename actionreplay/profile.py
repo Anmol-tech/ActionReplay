@@ -16,6 +16,7 @@ STATUSES = {
     "TRANSIENT_FAILURE": ("Temporary service failure", "recover"),
     "KNOWN_INTERSTITIAL": ("Maintenance notice", "recover"),
     "UNEXPECTED_DIALOG": ("Unexpected verification required", "intervention"),
+    "STAFF_VERIFICATION_REQUIRED": ("Staff verification required", "intervention"),
 }
 
 
