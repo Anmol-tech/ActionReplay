@@ -257,3 +257,25 @@ async def test_step_budget_counts_invalid_decisions(tmp_path, mock_server):
         assert result.code == "OPERATOR_ABORTED"
     finally:
         await surface.close()
+
+
+def test_finish_allows_empty_outputs_after_confirm():
+    decision = Decision(
+        kind="finish",
+        step=None,
+        outputs={},
+        success=[Condition(kind="route", value=Binding(kind="literal", value="/workspace"))],
+        rationale="Human confirmed",
+    )
+    assert decision.outputs == {}
+    coerced = json.loads(
+        coerce_decision_arguments(
+            {
+                "kind": "finish",
+                "success": [{"kind": "route", "value": {"kind": "literal", "value": "/workspace"}}],
+            }
+        )
+    )
+    assert coerced["outputs"] == {}
+    hint = completion_hint([{"result": "human_confirmation", "code": "HUMAN_CONFIRMATION_REQUIRED"}])
+    assert "/workspace" in hint

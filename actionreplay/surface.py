@@ -157,7 +157,14 @@ class BrowserSurface:
         approved = set(
             self.config.policy.safe_click_labels
             + self.config.policy.safe_field_names
-            + ["Restore session", "Resolve verification"]
+            + [
+                "Restore session",
+                "Resolve verification",
+                "Confirm transfer",
+                "Confirm create",
+                "Confirm delete",
+                "Confirm creation",
+            ]
         )
         self.evidence.event(
             "human_activity",

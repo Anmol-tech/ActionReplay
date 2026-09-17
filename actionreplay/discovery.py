@@ -20,15 +20,19 @@ from .evidence import EvidenceError, save_revision
 from .models import (
     Application,
     Capability,
+    Check,
     Condition,
     Contract,
     Model,
+    Navigate,
     RunResult,
     Step,
     Target,
+    literal,
 )
 from .policy import (
     AutomationError,
+    confirmation_result_visible,
     goal_stops_before_irreversible_confirm,
     observation_irreversible_confirms,
 )
@@ -47,14 +51,20 @@ class Decision(Model):
     def shape(self):
         if self.kind == "action" and self.step is None:
             raise ValueError("Action requires step")
-        if self.kind == "finish" and (self.step is not None or not self.success or not self.outputs):
-            raise ValueError("Finish needs outputs, verified conditions, and no action")
+        if self.kind == "finish" and (self.step is not None or not self.success):
+            raise ValueError("Finish needs verified success conditions and no action")
         return self
 
 
 FINISH_EXAMPLE = (
     '{"kind":"finish","step":null,"outputs":{"balance":{"type":"decimal","variable":"balance"}},'
     '"success":[{"kind":"visible","target":"e1"}],"rationale":"Extracted value is visible"}'
+)
+
+FINISH_AFTER_CONFIRM_EXAMPLE = (
+    '{"kind":"finish","step":null,"outputs":{},'
+    '"success":[{"kind":"route","value":{"kind":"literal","value":"/workspace"}}],'
+    '"rationale":"Human confirmed; confirmation result visible"}'
 )
 
 STEP_FIELD_NAMES = {
@@ -136,6 +146,7 @@ def coerce_decision_arguments(arguments, inputs: dict | None = None):
     if data.get("kind") == "finish":
         data["step"] = None
         data.pop("action", None)
+        data.setdefault("outputs", {})
         success = data.get("success")
         if isinstance(success, dict):
             data["success"] = [success]
@@ -202,9 +213,10 @@ Use anchored output controls where offered. Observations include visible labels,
 Only finish after extracting requested values.
 Irreversible Confirm* buttons (Confirm transfer / create / delete / creation) cannot be clicked by automation.
 If the goal is to reach the confirmation/review screen (or says do not confirm / prepare / stop at review): extract the review values and kind=finish while Confirm* may still be visible. Do not click Confirm.
-If the goal requires completing the change (create/transfer/delete/open after confirmation): when Confirm* is visible the runtime pauses for the human operator. After Resume (operator left the review screen), continue and finish on the confirmation/workspace result.
+If the goal requires completing the change (create/transfer/delete/open after confirmation): when Confirm* is visible the runtime pauses for the human operator. After Resume (operator left the review screen), if the confirmation/workspace result is visible, kind=finish with empty outputs and a route or visible success on CURRENT e-refs (outputs may be {}).
 If the last executed action was extract and extracted_variables is non-empty and no human Confirm is still required for the goal, return kind=finish now.
 Finish shape (replace names/refs): """ + FINISH_EXAMPLE + """
+After human Confirm, empty-output finish is valid: """ + FINISH_AFTER_CONFIRM_EXAMPLE + """
 Finish success conditions must use visible (or route) on CURRENT e-refs for approved headings/labels.
 Do not put monetary amounts, member IDs, or other sensitive values into success literals.
 Use simple snake_case IDs, variable names, and output names. Rationale is a brief action summary, not private reasoning.
@@ -242,13 +254,17 @@ def completion_hint(history):
             "Extract the requested output first with action=extract on a visible output control, "
             "then call kind=finish."
         )
-    if last.get("code") == "HUMAN_CONFIRMATION_REQUIRED":
+    if last.get("code") == "HUMAN_CONFIRMATION_REQUIRED" or last.get("result") == "human_confirmation":
         return (
-            "Human confirmation was requested. After Resume, re-observe. "
-            "If Confirm is gone and a confirmation/workspace result is visible, extract if needed and kind=finish. "
-            "If still on the review screen, the operator has not confirmed yet."
+            "Human Confirm completed. If Confirmation reference / Member created (or transfer/delete) "
+            "status is visible, return kind=finish now with empty outputs and a route or visible success. "
+            "Example: " + FINISH_AFTER_CONFIRM_EXAMPLE
         )
     if last.get("result") == "rejected" and last.get("code") == "MODEL_DECISION_SCHEMA_INVALID":
+        if any(h.get("result") == "human_confirmation" for h in history):
+            return (
+                "Previous finish JSON was invalid. After human Confirm use: " + FINISH_AFTER_CONFIRM_EXAMPLE
+            )
         return "Previous finish/action JSON was invalid. Retry with this exact finish shape: " + FINISH_EXAMPLE
     if last.get("result") == "rejected" and last.get("code") == "UNAPPROVED_ARTIFACT_LITERAL":
         return (
@@ -568,6 +584,74 @@ class DiscoveryEngine:
             client,
         )
 
+    async def _save_success(self, recorder, name, capability_root, outputs, success, variables=None):
+        variables = variables or {}
+        capability = recorder.capability(name, self.evidence.run_id, self.config, outputs, success)
+        outputs_out = {
+            k: c.check(variables[c.variable]) for k, c in capability.outputs.items()
+        }
+        folder = capability_root / name
+        existing = [int(p.stem) for p in folder.glob("*.json") if p.stem.isdigit()]
+        capability.revision = max(existing, default=0) + 1
+        self.evidence.attach(capability)
+        revision_path = save_revision(capability_root, capability)
+        self.evidence.event(
+            "capability_saved",
+            capability_id=capability.capability_id,
+            revision=capability.revision,
+            path=str(revision_path),
+        )
+        return RunResult(status="success", code="OK", run_id=self.evidence.run_id, outputs=outputs_out)
+
+    async def _finish_after_human_confirm(self, recorder, name, capability_root):
+        """Complete discovery when the operator already committed on the live session."""
+        observation = await self.surface.observe()
+        refs = copy.deepcopy(self.surface.refs)
+        self.evidence.event(
+            "observation",
+            controls=len(refs),
+            frames=len(observation["frames"]),
+            after_human_confirm=True,
+        )
+        if not confirmation_result_visible(observation):
+            return None
+        success = [Condition(kind="route", value=literal("/workspace"))]
+        heading_ref = None
+        for frame in observation["frames"]:
+            for element in frame.get("elements") or []:
+                if element.get("ref") and element.get("text") == "Member servicing":
+                    heading_ref = element["ref"]
+                    break
+            if heading_ref:
+                break
+        if heading_ref:
+            success.append(
+                Condition(kind="visible", target=recorder.target(heading_ref, refs))
+            )
+        for condition in success:
+            recorder.check_literals(condition)
+        if not recorder.steps:
+            # Operator completed the irreversible commit; keep a durable verified checkpoint step.
+            if heading_ref:
+                target_key = recorder.target(heading_ref, refs)
+                recorder.steps.append(
+                    Check(
+                        id="step_human_confirm",
+                        action="assert",
+                        condition=Condition(kind="visible", target=target_key),
+                    )
+                )
+            else:
+                recorder.steps.append(
+                    Navigate(
+                        id="step_human_confirm",
+                        action="navigate",
+                        route=literal("/workspace"),
+                    )
+                )
+        self.evidence.event("human_confirm_autocompleted", route="/workspace")
+        return await self._save_success(recorder, name, capability_root, {}, success)
+
     async def run(self, goal, target, inputs, name, capability_root=Path("capabilities")):
         recorder = Recorder(inputs, self.config)
         executor = ReplayEngine(self.config, self.surface, self.evidence, self.controller)
@@ -670,6 +754,12 @@ class DiscoveryEngine:
                                 "labels": pending_confirms[:4],
                             }
                         )
+                        finished = await self._finish_after_human_confirm(
+                            recorder, name, capability_root
+                        )
+                        if finished is not None:
+                            result = finished
+                            break
                         continue
                     cycles += 1
                     self.evidence.event("model_request", cycle=cycles)
@@ -721,25 +811,13 @@ class DiscoveryEngine:
                             ]
                         ):
                             raise AutomationError("SUCCESS_CHECKPOINT_FAILED")
-                        capability = recorder.capability(
-                            name, self.evidence.run_id, self.config, decision.outputs, success
-                        )
-                        outputs = {
-                            k: c.check(executor.variables[c.variable]) for k, c in capability.outputs.items()
-                        }
-                        folder = capability_root / name
-                        existing = [int(p.stem) for p in folder.glob("*.json") if p.stem.isdigit()]
-                        capability.revision = max(existing, default=0) + 1
-                        self.evidence.attach(capability)
-                        revision_path = save_revision(capability_root, capability)
-                        self.evidence.event(
-                            "capability_saved",
-                            capability_id=capability.capability_id,
-                            revision=capability.revision,
-                            path=str(revision_path),
-                        )
-                        result = RunResult(
-                            status="success", code="OK", run_id=self.evidence.run_id, outputs=outputs
+                        result = await self._save_success(
+                            recorder,
+                            name,
+                            capability_root,
+                            decision.outputs,
+                            success,
+                            executor.variables,
                         )
                         break
                     step = recorder.materialize(decision.step, refs)
@@ -872,6 +950,12 @@ class DiscoveryEngine:
                                 "guidance": rejection_guidance(code),
                             }
                         )
+                        finished = await self._finish_after_human_confirm(
+                            recorder, name, capability_root
+                        )
+                        if finished is not None:
+                            result = finished
+                            break
                         continue
                     if code.startswith("POLICY_") or code in {
                         "UNEXPECTED_DIALOG",

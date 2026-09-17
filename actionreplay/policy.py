@@ -80,6 +80,24 @@ def goal_stops_before_irreversible_confirm(goal: str) -> bool:
     return any(marker in text for marker in markers)
 
 
+def confirmation_result_visible(observation: dict) -> bool:
+    """True when the post-commit confirmation/result UI is visible."""
+    markers = (
+        "Confirmation reference",
+        "Member created",
+        "Transfer posted",
+        "Member deleted",
+        "Sub-account request accepted",
+        "Request accepted",
+    )
+    for frame in observation.get("frames") or []:
+        for element in frame.get("elements") or []:
+            text = element.get("text") or ""
+            if any(marker in text for marker in markers):
+                return True
+    return False
+
+
 
 class Policy:
     def __init__(self, config: PolicyConfig):
