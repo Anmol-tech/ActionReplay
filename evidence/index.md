@@ -4,11 +4,11 @@ Provenance is explicit. Prefer the `live` discovery/replay entries for the assig
 
 ## Live OpenRouter demonstration
 
-- [7ad50bfbfbc443c49874a1e0bb7e76e2](7ad50bfbfbc443c49874a1e0bb7e76e2/manifest.json) — discovery, live, result `OK` (genuine OpenRouter run). [Events](7ad50bfbfbc443c49874a1e0bb7e76e2/events.jsonl), [capability](7ad50bfbfbc443c49874a1e0bb7e76e2/capability.json).
-- [c7bc81d0839445468937c5f40f00a111](c7bc81d0839445468937c5f40f00a111/manifest.json) — replay on the **current** LegacyBank mock, alternate inputs, result `OK`. [Events](c7bc81d0839445468937c5f40f00a111/events.jsonl), [capability](c7bc81d0839445468937c5f40f00a111/capability.json).
-- [9b39dd1759ce42bc88477d89f3961a1e](9b39dd1759ce42bc88477d89f3961a1e/manifest.json) — replay on the current mock, result `MEMBER_NOT_FOUND`. [Events](9b39dd1759ce42bc88477d89f3961a1e/events.jsonl), [capability](9b39dd1759ce42bc88477d89f3961a1e/capability.json).
+- [abf58aa2f2b84125b970a6bf936fa4b4](abf58aa2f2b84125b970a6bf936fa4b4/manifest.json) — discovery on the **current** LegacyBank mock, live OpenRouter, result `OK`. [Events](abf58aa2f2b84125b970a6bf936fa4b4/events.jsonl), [capability](abf58aa2f2b84125b970a6bf936fa4b4/capability.json).
+- [ba89a1c3d5b1478786b3ecb17a61d61a](ba89a1c3d5b1478786b3ecb17a61d61a/manifest.json) — replay, alternate inputs, result `OK`. [Events](ba89a1c3d5b1478786b3ecb17a61d61a/events.jsonl), [capability](ba89a1c3d5b1478786b3ecb17a61d61a/capability.json).
+- [f32d4a63d2f5401ebe239deff4d156c5](f32d4a63d2f5401ebe239deff4d156c5/manifest.json) — replay, result `MEMBER_NOT_FOUND`. [Events](f32d4a63d2f5401ebe239deff4d156c5/events.jsonl), [capability](f32d4a63d2f5401ebe239deff4d156c5/capability.json).
 
-Older live replays (`755f7eba…`, `1a3caae3…`) remain in this directory for history; prefer the current-mock pair above for review.
+Older live runs (`7ad50bfb…`, `c7bc81d0…`, `9b39dd17…`, and earlier) remain for history; prefer the trio above for review.
 
 ## Offline / fixture demonstrations
 

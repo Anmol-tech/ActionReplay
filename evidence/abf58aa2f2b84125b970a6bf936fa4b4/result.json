@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "code": "OK",
+  "run_id": "abf58aa2f2b84125b970a6bf936fa4b4",
+  "outputs": {
+    "savings_balance": "[REDACTED]"
+  },
+  "step_id": null,
+  "expected": null,
+  "observed": null,
+  "evidence": [],
+  "outputs_validated": true
+}

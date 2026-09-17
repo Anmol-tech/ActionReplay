@@ -308,15 +308,28 @@ class BrowserSurface:
             "h2": "heading",
             "h3": "heading",
         }.get(tag)
+        approved = set(self.config.policy.approved_literals + self.config.policy.safe_click_labels)
         if node["label"]:
+            # Labels must be known field names; raw values are never identifying labels.
+            if node["label"] not in approved and node["label"] not in self.config.policy.safe_field_names:
+                return None
             spec = Locator(strategy="label", text=literal(node["label"]))
         elif role and text:
+            if text not in approved:
+                return None
             spec = Locator(strategy="role", role=role, text=literal(text))
         elif tag in {"input", "select"} and node["anchor"]:
+            if node["anchor"] not in approved and node["anchor"] not in self.config.policy.safe_field_names:
+                return None
             spec = Locator(strategy="anchored", text=literal(node["anchor"]), child_tag=tag)
         elif tag == "output" and node["anchor"]:
+            if node["anchor"] not in approved and node["anchor"] not in self.config.policy.safe_field_names:
+                return None
             spec = Locator(strategy="anchored", text=literal(node["anchor"]), child_tag="output")
         elif text:
+            # Never mint e-refs for dynamic values (amounts, IDs); those are not durable locators.
+            if text not in approved:
+                return None
             spec = Locator(strategy="text", text=literal(text))
         else:
             return None

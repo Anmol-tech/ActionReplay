@@ -341,8 +341,9 @@ def rejection_guidance(code):
             "Use action=extract on a visible output control, then finish."
         ),
         "UNAPPROVED_ARTIFACT_LITERAL": (
-            "Use only approved literal labels/headings in artifacts. For finish, prefer kind=visible "
-            "on a CURRENT e-ref; do not embed amounts or member IDs as literals."
+            "Use only approved literal labels/headings in artifacts. "
+            "For amounts, extract the anchored Amount output control (not the raw dollar text). "
+            "For finish, prefer kind=visible on a CURRENT e-ref; do not embed amounts or member IDs as literals."
         ),
         "POLICY_RISKY_CONTROL": (
             "That control is blocked. Prefer a safe action, or extract + finish on a review-only goal."

@@ -2,17 +2,11 @@
 
 The live OpenRouter discovery requirement is satisfied by:
 
-- [7ad50bfbfbc443c49874a1e0bb7e76e2](7ad50bfbfbc443c49874a1e0bb7e76e2/manifest.json) — discovery, `provenance: live`, model `qwen/qwen3-vl-235b-a22b-instruct`, result `OK`
-- [c7bc81d0839445468937c5f40f00a111](c7bc81d0839445468937c5f40f00a111/manifest.json) — replay of the saved capability on the **current** LegacyBank mock with alternate member inputs, result `OK`
-- [9b39dd1759ce42bc88477d89f3961a1e](9b39dd1759ce42bc88477d89f3961a1e/manifest.json) — replay business outcome `MEMBER_NOT_FOUND` on the current mock
+- [abf58aa2f2b84125b970a6bf936fa4b4](abf58aa2f2b84125b970a6bf936fa4b4/manifest.json) — discovery on the **current** LegacyBank mock, `provenance: live`, result `OK`
+- [ba89a1c3d5b1478786b3ecb17a61d61a](ba89a1c3d5b1478786b3ecb17a61d61a/manifest.json) — replay with alternate member inputs, result `OK`
+- [f32d4a63d2f5401ebe239deff4d156c5](f32d4a63d2f5401ebe239deff4d156c5/manifest.json) — replay business outcome `MEMBER_NOT_FOUND`
 
-Refresh current-mock replays with:
-
-```bash
-uv run python scripts/refresh_live_evidence.py
-```
-
-Optional new discovery (requires a successful OpenRouter run):
+Refresh with:
 
 ```bash
 uv run python scripts/refresh_live_evidence.py --discover

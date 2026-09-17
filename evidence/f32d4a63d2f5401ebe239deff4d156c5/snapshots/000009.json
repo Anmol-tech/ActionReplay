@@ -1,0 +1,34 @@
+{
+  "frames": [
+    {
+      "route": "/",
+      "controls": [
+        {
+          "tag": "h1",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        }
+      ]
+    },
+    {
+      "route": "/shell",
+      "controls": []
+    },
+    {
+      "route": "/search",
+      "controls": [
+        {
+          "tag": "p",
+          "label": "[REDACTED]",
+          "text": "Member not found"
+        },
+        {
+          "tag": "a",
+          "label": "[REDACTED]",
+          "text": "Back"
+        }
+      ]
+    }
+  ],
+  "native_dialog": false
+}
