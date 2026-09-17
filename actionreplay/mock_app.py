@@ -153,7 +153,6 @@ def create_app(scenario=None):
                 "restored": False,
                 "continued": False,
                 "transient_seen": False,
-                "verified_ops": set(),
                 "drafts": {},
                 "flash": None,
             }
@@ -167,9 +166,6 @@ def create_app(scenario=None):
         if chrome:
             bar = """<div class="topbar">
               <strong>LBCORE · TELLER</strong>
-              <span>Branch 0142</span>
-              <span>Workstation W-17</span>
-              <span>Env DEMO</span>
             </div>"""
         return HTMLResponse(
             f"""<!doctype html><html><head><meta charset="utf-8"><title>{html.escape(title)}</title>
@@ -196,36 +192,6 @@ def create_app(scenario=None):
             return None, page('<div class="panel"><p class="status bad">Member not found</p></div>')
         return member_id, None
 
-    def op_key(kind, request):
-        member_id = request.query_params.get("member_id", "")
-        if kind == "create-member":
-            return "create-member"
-        return f"{kind}:{member_id}"
-
-    def verification_gate(request, next_path, title, kind):
-        state = request.state.session
-        key = op_key(kind, request)
-        if key in state["verified_ops"]:
-            return None
-        q = query(request)
-        back = (
-            f'/member?{urlencode({"member_id": q.get("member_id", "")})}'
-            if q.get("member_id")
-            else "/workspace"
-        )
-        return page(
-            f"""<div class="panel">
-              <h2>{html.escape(title)}</h2>
-              <p class="status">Staff verification required</p>
-              <p>This operation needs dual-control authorization before the workstation can continue.</p>
-              <div class="actions">
-                <a class="button primary" href="/verify?{urlencode({**q, "next": next_path, "op": key})}">Verify staff authorization</a>
-                <a href="{back}">Back</a>
-              </div>
-              <p class="note">Authorization is recorded for this session and operation only.</p>
-            </div>"""
-        )
-
     def account_type_key(label: str) -> str:
         return (label or "").strip().lower()
 
@@ -234,7 +200,6 @@ def create_app(scenario=None):
         return page(
             """<div class="brand-wrap">
               <h1>LegacyBank 1.0 — Staff workspace</h1>
-              <p class="note">Member servicing · inquiry · transfers · account maintenance</p>
             </div>
             <iframe class="shell-frame" name="shell" title="Bank shell" src="/shell"></iframe>"""
         )
@@ -258,7 +223,6 @@ def create_app(scenario=None):
         return page(
             f"""<div class="panel">
               <h2>Member servicing</h2>
-              <div class="meta"><span>Queue: walk-up</span><span>Mode: inquiry + maintenance</span></div>
               {notice}
               <p><a href="/create-member">Create member</a></p>
               <form action="/search">
@@ -359,12 +323,7 @@ def create_app(scenario=None):
         return page(
             f"""<div class="panel">
               <h2>Member details</h2>
-              <div class="meta">
-                <span>Member {html.escape(member_id)}</span>
-                <span>{html.escape(record["name"])}</span>
-                <span>{html.escape(record["status"])}</span>
-                <span>Home branch {html.escape(record["branch"])}</span>
-              </div>
+              <p>Member {html.escape(member_id)}</p>
               <div class="dossier">
                 <div class="card">
                   <h3>Accounts</h3>
@@ -486,25 +445,11 @@ def create_app(scenario=None):
             </div>"""
         )
 
-    @app.get("/verify")
-    async def verify(request: Request):
-        nxt = request.query_params.get("next", "/workspace")
-        op = request.query_params.get("op", "")
-        if not nxt.startswith("/") or nxt.startswith("//") or ".." in nxt:
-            nxt = "/workspace"
-        if op:
-            request.state.session["verified_ops"].add(op)
-        q = {k: v for k, v in request.query_params.items() if k not in {"next", "op"}}
-        return RedirectResponse(nxt + (("?" + urlencode(q)) if q else ""), status_code=303)
-
     @app.get("/transfer", response_class=HTMLResponse)
     async def transfer(request: Request):
         member_id, error = require_member(request)
         if error:
             return error
-        blocked = verification_gate(request, "/transfer", "Transfer funds", "transfer")
-        if blocked:
-            return blocked
         record = members[member_id]
         account_names = [a.title() for a in record["accounts"]]
         from_options = "".join(f"<option>{name}</option>" for name in account_names)
@@ -518,7 +463,6 @@ def create_app(scenario=None):
         return page(
             f'''<div class="panel">
               <h2>Transfer funds</h2>
-              <div class="meta"><span>Member {escaped}</span><span>{html.escape(record["name"])}</span></div>
               <form action="/transfer-review">
                 <input type="hidden" name="member_id" value="{escaped}">
                 <table>
@@ -625,9 +569,6 @@ def create_app(scenario=None):
 
     @app.get("/create-member", response_class=HTMLResponse)
     async def create_member(request: Request):
-        blocked = verification_gate(request, "/create-member", "Create member", "create-member")
-        if blocked:
-            return blocked
         return page(
             """<div class="panel">
               <h2>Create member</h2>
@@ -710,9 +651,6 @@ def create_app(scenario=None):
         member_id, error = require_member(request)
         if error:
             return error
-        blocked = verification_gate(request, "/delete-member", "Delete member", "delete")
-        if blocked:
-            return blocked
         q = urlencode(dict(member_id=member_id))
         return page(
             f"""<div class="panel">

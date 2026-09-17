@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "capability_id": "savings-balance",
-  "revision": 3,
-  "name": "savings-balance",
+  "capability_id": "create-member-review",
+  "revision": 1,
+  "name": "create-member-review",
   "description": "Capability recorded from verified UI actions",
-  "source_run_id": "1f68581c03324ee1aa19682090787f60",
+  "source_run_id": "facdf641192e4e449bcad2a7fb523ade",
   "application": {
     "family": "legacy-bank",
     "surface": "browser",
@@ -14,7 +14,17 @@
     "entry_route": "/"
   },
   "inputs": {
-    "member_id": {
+    "new_member_id": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "enum": [],
+      "pattern": null,
+      "minimum": null,
+      "maximum": null,
+      "variable": null
+    },
+    "display_name": {
       "type": "string",
       "required": true,
       "sensitive": true,
@@ -26,15 +36,15 @@
     }
   },
   "outputs": {
-    "balance": {
-      "type": "decimal",
+    "new_member_id": {
+      "type": "string",
       "required": true,
       "sensitive": true,
       "enum": [],
       "pattern": null,
       "minimum": null,
       "maximum": null,
-      "variable": "balance"
+      "variable": "new_member_id"
     }
   },
   "targets": {
@@ -398,6 +408,46 @@
       "scope": null,
       "description": "Trusted runtime status"
     },
+    "status_staff_verification_required": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Staff verification required"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
     "known_continue": {
       "frame_path": [
         {
@@ -438,7 +488,87 @@
       "scope": null,
       "description": "Trusted interstitial dismissal"
     },
-    "t_fb21394b6821": {
+    "t_55d2fb86c774": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Create member"
+        },
+        "role": "link",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Visible control identified during discovery"
+    },
+    "t_cc7ed6e560c8": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Create member"
+        },
+        "role": "heading",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Visible control identified during discovery"
+    },
+    "t_04f4bc2745e7": {
       "frame_path": [
         {
           "strategy": "attribute",
@@ -466,7 +596,7 @@
         "text": {
           "kind": "literal",
           "name": null,
-          "value": "Member ID"
+          "value": "New member ID"
         },
         "role": null,
         "name": null,
@@ -478,7 +608,47 @@
       "scope": null,
       "description": "Visible control identified during discovery"
     },
-    "t_67eb44c31d52": {
+    "t_9d0030a0c6db": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "label",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Display name"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Visible control identified during discovery"
+    },
+    "t_150ba891bf7d": {
       "frame_path": [
         {
           "strategy": "attribute",
@@ -506,7 +676,7 @@
         "text": {
           "kind": "literal",
           "name": null,
-          "value": "Search"
+          "value": "Review create"
         },
         "role": "button",
         "name": null,
@@ -518,7 +688,7 @@
       "scope": null,
       "description": "Visible control identified during discovery"
     },
-    "t_1c9655c40783": {
+    "t_c98558172284": {
       "frame_path": [
         {
           "strategy": "attribute",
@@ -546,7 +716,7 @@
         "text": {
           "kind": "literal",
           "name": null,
-          "value": "Search results"
+          "value": "Create member review"
         },
         "role": "heading",
         "name": null,
@@ -558,167 +728,7 @@
       "scope": null,
       "description": "Visible control identified during discovery"
     },
-    "t_b6cc01834660": {
-      "frame_path": [
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "shell",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        },
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "workspace",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        }
-      ],
-      "locator": {
-        "strategy": "role",
-        "text": {
-          "kind": "literal",
-          "name": null,
-          "value": "Open member"
-        },
-        "role": "link",
-        "name": null,
-        "value": null,
-        "child_role": null,
-        "child_name": null,
-        "child_tag": null
-      },
-      "scope": null,
-      "description": "Visible control identified during discovery"
-    },
-    "t_41f42144bc94": {
-      "frame_path": [
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "shell",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        },
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "workspace",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        }
-      ],
-      "locator": {
-        "strategy": "role",
-        "text": {
-          "kind": "literal",
-          "name": null,
-          "value": "Member details"
-        },
-        "role": "heading",
-        "name": null,
-        "value": null,
-        "child_role": null,
-        "child_name": null,
-        "child_tag": null
-      },
-      "scope": null,
-      "description": "Visible control identified during discovery"
-    },
-    "t_c3eefa85df7a": {
-      "frame_path": [
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "shell",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        },
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "workspace",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        }
-      ],
-      "locator": {
-        "strategy": "role",
-        "text": {
-          "kind": "literal",
-          "name": null,
-          "value": "Savings"
-        },
-        "role": "link",
-        "name": null,
-        "value": null,
-        "child_role": null,
-        "child_name": null,
-        "child_tag": null
-      },
-      "scope": null,
-      "description": "Visible control identified during discovery"
-    },
-    "t_77f59b266ef9": {
-      "frame_path": [
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "shell",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        },
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "workspace",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        }
-      ],
-      "locator": {
-        "strategy": "role",
-        "text": {
-          "kind": "literal",
-          "name": null,
-          "value": "Savings balance"
-        },
-        "role": "heading",
-        "name": null,
-        "value": null,
-        "child_role": null,
-        "child_name": null,
-        "child_tag": null
-      },
-      "scope": null,
-      "description": "Visible control identified during discovery"
-    },
-    "t_38164b7f52ee": {
+    "t_d329956f9c04": {
       "frame_path": [
         {
           "strategy": "attribute",
@@ -746,7 +756,7 @@
         "text": {
           "kind": "literal",
           "name": null,
-          "value": "Amount"
+          "value": "New member ID"
         },
         "role": null,
         "name": null,
@@ -765,7 +775,30 @@
       "preconditions": [
         {
           "kind": "visible",
-          "target": "t_fb21394b6821",
+          "target": "t_55d2fb86c774",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [
+        {
+          "kind": "visible",
+          "target": "t_cc7ed6e560c8",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "action": "click",
+      "target": "t_55d2fb86c774"
+    },
+    {
+      "id": "step_2",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "t_04f4bc2745e7",
           "value": null,
           "variable": null,
           "conditions": []
@@ -774,10 +807,10 @@
       "postconditions": [
         {
           "kind": "value_equals",
-          "target": "t_fb21394b6821",
+          "target": "t_04f4bc2745e7",
           "value": {
             "kind": "input",
-            "name": "member_id",
+            "name": "new_member_id",
             "value": null
           },
           "variable": null,
@@ -785,42 +818,19 @@
         }
       ],
       "action": "fill",
-      "target": "t_fb21394b6821",
+      "target": "t_04f4bc2745e7",
       "value": {
         "kind": "input",
-        "name": "member_id",
+        "name": "new_member_id",
         "value": null
       }
-    },
-    {
-      "id": "step_2",
-      "preconditions": [
-        {
-          "kind": "visible",
-          "target": "t_67eb44c31d52",
-          "value": null,
-          "variable": null,
-          "conditions": []
-        }
-      ],
-      "postconditions": [
-        {
-          "kind": "visible",
-          "target": "t_1c9655c40783",
-          "value": null,
-          "variable": null,
-          "conditions": []
-        }
-      ],
-      "action": "click",
-      "target": "t_67eb44c31d52"
     },
     {
       "id": "step_3",
       "preconditions": [
         {
           "kind": "visible",
-          "target": "t_b6cc01834660",
+          "target": "t_9d0030a0c6db",
           "value": null,
           "variable": null,
           "conditions": []
@@ -828,22 +838,31 @@
       ],
       "postconditions": [
         {
-          "kind": "visible",
-          "target": "t_41f42144bc94",
-          "value": null,
+          "kind": "value_equals",
+          "target": "t_9d0030a0c6db",
+          "value": {
+            "kind": "input",
+            "name": "display_name",
+            "value": null
+          },
           "variable": null,
           "conditions": []
         }
       ],
-      "action": "click",
-      "target": "t_b6cc01834660"
+      "action": "fill",
+      "target": "t_9d0030a0c6db",
+      "value": {
+        "kind": "input",
+        "name": "display_name",
+        "value": null
+      }
     },
     {
       "id": "step_4",
       "preconditions": [
         {
           "kind": "visible",
-          "target": "t_c3eefa85df7a",
+          "target": "t_150ba891bf7d",
           "value": null,
           "variable": null,
           "conditions": []
@@ -852,21 +871,21 @@
       "postconditions": [
         {
           "kind": "visible",
-          "target": "t_77f59b266ef9",
+          "target": "t_c98558172284",
           "value": null,
           "variable": null,
           "conditions": []
         }
       ],
       "action": "click",
-      "target": "t_c3eefa85df7a"
+      "target": "t_150ba891bf7d"
     },
     {
       "id": "step_5",
       "preconditions": [
         {
           "kind": "visible",
-          "target": "t_38164b7f52ee",
+          "target": "t_d329956f9c04",
           "value": null,
           "variable": null,
           "conditions": []
@@ -875,17 +894,17 @@
       "postconditions": [
         {
           "kind": "visible",
-          "target": "t_38164b7f52ee",
+          "target": "t_d329956f9c04",
           "value": null,
           "variable": null,
           "conditions": []
         }
       ],
       "action": "extract",
-      "target": "t_38164b7f52ee",
-      "variable": "balance",
+      "target": "t_d329956f9c04",
+      "variable": "new_member_id",
       "source": "text",
-      "conversion": "currency"
+      "conversion": "text"
     }
   ],
   "outcomes": [
@@ -1012,12 +1031,24 @@
       },
       "response": "intervention",
       "recovery": []
+    },
+    {
+      "code": "STAFF_VERIFICATION_REQUIRED",
+      "condition": {
+        "kind": "visible",
+        "target": "status_staff_verification_required",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "intervention",
+      "recovery": []
     }
   ],
   "success": [
     {
       "kind": "visible",
-      "target": "t_77f59b266ef9",
+      "target": "t_c98558172284",
       "value": null,
       "variable": null,
       "conditions": []

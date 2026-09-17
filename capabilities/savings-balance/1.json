@@ -4,7 +4,7 @@
   "revision": 1,
   "name": "savings-balance",
   "description": "Capability recorded from verified UI actions",
-  "source_run_id": "7ad50bfbfbc443c49874a1e0bb7e76e2",
+  "source_run_id": "958fb96518c84ed093b9acf92299a4ec",
   "application": {
     "family": "legacy-bank",
     "surface": "browser",
@@ -34,7 +34,7 @@
       "pattern": null,
       "minimum": null,
       "maximum": null,
-      "variable": "balance"
+      "variable": "savings_balance"
     }
   },
   "targets": {
@@ -398,6 +398,46 @@
       "scope": null,
       "description": "Trusted runtime status"
     },
+    "status_staff_verification_required": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Staff verification required"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
     "known_continue": {
       "frame_path": [
         {
@@ -638,87 +678,7 @@
       "scope": null,
       "description": "Visible control identified during discovery"
     },
-    "t_c3eefa85df7a": {
-      "frame_path": [
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "shell",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        },
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "workspace",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        }
-      ],
-      "locator": {
-        "strategy": "role",
-        "text": {
-          "kind": "literal",
-          "name": null,
-          "value": "Savings"
-        },
-        "role": "link",
-        "name": null,
-        "value": null,
-        "child_role": null,
-        "child_name": null,
-        "child_tag": null
-      },
-      "scope": null,
-      "description": "Visible control identified during discovery"
-    },
-    "t_77f59b266ef9": {
-      "frame_path": [
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "shell",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        },
-        {
-          "strategy": "attribute",
-          "text": null,
-          "role": null,
-          "name": "name",
-          "value": "workspace",
-          "child_role": null,
-          "child_name": null,
-          "child_tag": null
-        }
-      ],
-      "locator": {
-        "strategy": "role",
-        "text": {
-          "kind": "literal",
-          "name": null,
-          "value": "Savings balance"
-        },
-        "role": "heading",
-        "name": null,
-        "value": null,
-        "child_role": null,
-        "child_name": null,
-        "child_tag": null
-      },
-      "scope": null,
-      "description": "Visible control identified during discovery"
-    },
-    "t_38164b7f52ee": {
+    "t_29bcdc88aba4": {
       "frame_path": [
         {
           "strategy": "attribute",
@@ -746,7 +706,7 @@
         "text": {
           "kind": "literal",
           "name": null,
-          "value": "Amount"
+          "value": "Savings"
         },
         "role": null,
         "name": null,
@@ -843,7 +803,7 @@
       "preconditions": [
         {
           "kind": "visible",
-          "target": "t_c3eefa85df7a",
+          "target": "t_29bcdc88aba4",
           "value": null,
           "variable": null,
           "conditions": []
@@ -852,38 +812,15 @@
       "postconditions": [
         {
           "kind": "visible",
-          "target": "t_77f59b266ef9",
-          "value": null,
-          "variable": null,
-          "conditions": []
-        }
-      ],
-      "action": "click",
-      "target": "t_c3eefa85df7a"
-    },
-    {
-      "id": "step_5",
-      "preconditions": [
-        {
-          "kind": "visible",
-          "target": "t_38164b7f52ee",
-          "value": null,
-          "variable": null,
-          "conditions": []
-        }
-      ],
-      "postconditions": [
-        {
-          "kind": "visible",
-          "target": "t_38164b7f52ee",
+          "target": "t_29bcdc88aba4",
           "value": null,
           "variable": null,
           "conditions": []
         }
       ],
       "action": "extract",
-      "target": "t_38164b7f52ee",
-      "variable": "balance",
+      "target": "t_29bcdc88aba4",
+      "variable": "savings_balance",
       "source": "text",
       "conversion": "currency"
     }
@@ -1012,12 +949,24 @@
       },
       "response": "intervention",
       "recovery": []
+    },
+    {
+      "code": "STAFF_VERIFICATION_REQUIRED",
+      "condition": {
+        "kind": "visible",
+        "target": "status_staff_verification_required",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "intervention",
+      "recovery": []
     }
   ],
   "success": [
     {
       "kind": "visible",
-      "target": "t_77f59b266ef9",
+      "target": "t_29bcdc88aba4",
       "value": null,
       "variable": null,
       "conditions": []

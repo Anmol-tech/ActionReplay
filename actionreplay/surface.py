@@ -206,6 +206,20 @@ class BrowserSurface:
             return False
         return True
 
+    def left_confirmation_review(self):
+        """True once no frame is still on a Confirm* review screen."""
+        from .policy import CONFIRMATION_REVIEW_PATHS
+
+        if not self.page:
+            return False
+        for frame in self.page.frames:
+            url = frame.url or ""
+            if not url.startswith("http"):
+                continue
+            if urlsplit(url).path in CONFIRMATION_REVIEW_PATHS:
+                return False
+        return True
+
     async def close(self):
         if self.context:
             await self.context.close()
@@ -356,9 +370,6 @@ class BrowserSurface:
                 "Temporary service failure",
                 "Maintenance notice",
                 "Unexpected verification required",
-                "Staff verification required",
-                "Verify staff authorization",
-                "Operator verifies",
                 "Confirm transfer",
                 "Confirm create",
                 "Confirm delete",

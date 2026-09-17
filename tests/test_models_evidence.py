@@ -61,17 +61,26 @@ def test_policy():
     ]:
         with pytest.raises(AutomationError):
             p.url(url)
-    with pytest.raises(AutomationError):
+    with pytest.raises(AutomationError, match="HUMAN_CONFIRMATION_REQUIRED"):
         p.control("click", "Confirm creation")
-    for label in [
-        "Confirm transfer",
-        "Confirm create",
-        "Confirm delete",
-        "Operator verifies",
-        "Verify staff authorization",
-    ]:
-        with pytest.raises(AutomationError, match="POLICY_RISKY_CONTROL"):
+    for label in ["Confirm transfer", "Confirm create", "Confirm delete"]:
+        with pytest.raises(AutomationError, match="HUMAN_CONFIRMATION_REQUIRED"):
             p.control("click", label)
+    from actionreplay.policy import goal_stops_before_irreversible_confirm, observation_irreversible_confirms
+
+    assert observation_irreversible_confirms(
+        {"frames": [{"elements": [{"text": "Confirm create"}, {"text": "Back"}]}]}
+    ) == ["Confirm create"]
+    assert observation_irreversible_confirms({"frames": [{"elements": [{"text": "Search"}]}]}) == []
+    assert goal_stops_before_irreversible_confirm(
+        "Open a new sub-account for this member and reach the confirmation screen"
+    )
+    assert goal_stops_before_irreversible_confirm(
+        "Prepare a funds transfer. Do not confirm the transfer."
+    )
+    assert not goal_stops_before_irreversible_confirm(
+        "Create a new member. Finish after the member-created confirmation is shown."
+    )
 
 
 def test_evidence_redaction_hash_export_cleanup(tmp_path):

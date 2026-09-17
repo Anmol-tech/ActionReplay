@@ -17,6 +17,34 @@ from .models import Capability
 LOGGER = logging.getLogger("actionreplay.cli")
 
 
+def load_local_env(config_path: str | None = None) -> Path | None:
+    """Load a local ignored .env if present. Existing process env wins."""
+    candidates: list[Path] = []
+    if config_path:
+        candidates.append(Path(config_path).resolve().parent / ".env")
+    candidates.append(Path.cwd() / ".env")
+    seen: set[Path] = set()
+    for env_path in candidates:
+        env_path = env_path.resolve()
+        if env_path in seen or not env_path.is_file():
+            continue
+        seen.add(env_path)
+        for raw in env_path.read_text().splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            if not key or key in os.environ:
+                continue
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+                value = value[1:-1]
+            os.environ[key] = value
+        return env_path
+    return None
+
+
 def parser():
     p = argparse.ArgumentParser(prog="actionreplay")
     p.add_argument("--config")
@@ -72,6 +100,9 @@ def main():
         stream=sys.stderr,
     )
     try:
+        env_path = load_local_env(args.config)
+        if env_path:
+            LOGGER.info("loaded_env_file path=%s", env_path)
         config = load_config(args.config)
         if args.command == "serve":
             from urllib.parse import urlsplit
@@ -86,11 +117,17 @@ def main():
             coord_url = urlsplit(args.coordinator)
             if mock_url.hostname != "127.0.0.1" or coord_url.hostname != "127.0.0.1":
                 raise ValueError("Serve binds to loopback only")
+            model = os.getenv("OPENROUTER_MODEL") or "[NOT_CONFIGURED]"
+            if not (os.getenv("OPENROUTER_API_KEY") and os.getenv("OPENROUTER_MODEL")):
+                LOGGER.warning(
+                    "openrouter_not_configured hint=Add OPENROUTER_API_KEY and OPENROUTER_MODEL to .env "
+                    "or export them before serve"
+                )
             LOGGER.info(
                 "services_starting mock_url=%s coordinator_url=%s model=%s headless=%s scenario=%s",
                 config.policy.base_url,
                 args.coordinator,
-                os.getenv("OPENROUTER_MODEL") or "[NOT_CONFIGURED]",
+                model,
                 config.headless,
                 config.scenario,
             )

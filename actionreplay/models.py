@@ -312,3 +312,6 @@ class Intervention(Model):
     reason: str
     evidence: list[str] = Field(default_factory=list)
     budget_exhausted: bool = False
+    goal: str | None = None
+    capability_name: str | None = None
+    mode: str | None = None

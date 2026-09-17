@@ -412,8 +412,8 @@
         </div>
       </div>
       <p id="connection-error" class="error" role="alert"></p>
-      <div id="handoff" hidden>
-        <p>Automation paused. Take control of the same Chromium window, fix the issue, then resume.</p>
+        <div id="handoff" hidden>
+        <p id="handoff-copy">Automation paused. Take control of the same Chromium window, fix the issue, then resume.</p>
         <p id="handoff-tip" class="muted" hidden></p>
         <div class="handoff-actions actions">
           <button id="take" type="button">Take Control</button>
@@ -460,12 +460,16 @@
               <label for="goal-preset">Goal preset</label>
               <select id="goal-preset">
                 <option value="savings">Savings balance (easy)</option>
-                <option value="subaccount">Sub-account review</option>
-                <option value="transfer">Transfer funds (needs human verify)</option>
-                <option value="create">Create member (needs human verify)</option>
-                <option value="delete">Delete member (needs human verify)</option>
+                <option value="subaccount">Sub-account → confirmation screen</option>
+                <option value="transfer">Transfer → review screen</option>
+                <option value="create">Create member → review screen</option>
+                <option value="delete">Delete member → review screen</option>
+                <option value="transfer-commit">Transfer (human Confirm)</option>
+                <option value="create-commit">Create member (human Confirm)</option>
+                <option value="delete-commit">Delete member (human Confirm)</option>
+                <option value="subaccount-commit">Sub-account (human Confirm)</option>
               </select>
-              <small>Harder goals pause for staff verification; irreversible confirms stay blocked.</small>
+              <small>Review/confirmation-screen goals finish without Confirm. Completing goals pause automatically so you click Confirm in the bank window.</small>
             </div>
             <div class="field"><label for="goal">Goal</label><textarea id="goal" name="goal" required>Find the savings balance for the supplied member</textarea></div>
             <div class="row">
@@ -555,24 +559,44 @@
         inputs: '{\n  "member_id": "00123"\n}',
       },
       subaccount: {
-        goal: 'Prepare a sub-account for the supplied member using account_type and nickname. Stop at review and return the displayed nickname. Do not confirm creation.',
+        goal: 'Open a new sub-account for this member and reach the confirmation screen',
         capability: 'subaccount-review',
         inputs: '{\n  "member_id": "00123",\n  "account_type": "Savings",\n  "nickname": "Vacation"\n}',
       },
       transfer: {
-        goal: 'Prepare a funds transfer for the supplied member using from_account and amount. After staff verification, stop on the transfer review screen and return the displayed amount. Do not confirm the transfer.',
+        goal: 'Prepare a funds transfer for the supplied member using from_account and amount. Stop on the transfer review screen and return the displayed amount. Do not confirm the transfer.',
         capability: 'transfer-review',
         inputs: '{\n  "member_id": "00123",\n  "from_account": "Savings",\n  "amount": "25.00"\n}',
       },
       create: {
-        goal: 'Prepare creating a new member using new_member_id and display_name. After staff verification, stop on the create-member review screen and return the displayed new member ID. Do not confirm create.',
+        goal: 'Prepare creating a new member using new_member_id and display_name. Stop on the create-member review screen and return the displayed new member ID. Do not confirm create.',
         capability: 'create-member-review',
         inputs: '{\n  "new_member_id": "00456",\n  "display_name": "Alex Rivera"\n}',
       },
       delete: {
-        goal: 'Prepare deleting the supplied member. After staff verification, stop on the delete-member review screen and return the displayed member ID. Do not confirm delete.',
+        goal: 'Prepare deleting the supplied member. Stop on the delete-member review screen and return the displayed member ID. Do not confirm delete.',
         capability: 'delete-member-review',
         inputs: '{\n  "member_id": "00123"\n}',
+      },
+      'transfer-commit': {
+        goal: 'Transfer funds for the supplied member using from_account and amount. Finish after the transfer confirmation is shown.',
+        capability: 'transfer',
+        inputs: '{\n  "member_id": "00123",\n  "from_account": "Savings",\n  "amount": "25.00"\n}',
+      },
+      'create-commit': {
+        goal: 'Create a new member using new_member_id and display_name. Finish after the member-created confirmation is shown.',
+        capability: 'create-member',
+        inputs: '{\n  "new_member_id": "00456",\n  "display_name": "Alex Rivera"\n}',
+      },
+      'delete-commit': {
+        goal: 'Delete the supplied member. Finish after the delete confirmation is shown.',
+        capability: 'delete-member',
+        inputs: '{\n  "member_id": "00123"\n}',
+      },
+      'subaccount-commit': {
+        goal: 'Open a sub-account for the supplied member using account_type and nickname. Finish after the sub-account confirmation is shown.',
+        capability: 'subaccount',
+        inputs: '{\n  "member_id": "00123",\n  "account_type": "Savings",\n  "nickname": "Vacation"\n}',
       },
     };
 
@@ -731,14 +755,23 @@
         $('context').textContent = state.run_id ? JSON.stringify(state, null, 2) : 'No run yet.';
         $('handoff').hidden = !state.intervention;
         const tip = $('handoff-tip');
-        if (state.intervention?.reason === 'NO_PROGRESS') {
+        const reason = state.intervention?.reason;
+        const resumeBtn = $('resume');
+        const handoffCopy = $('handoff-copy');
+        resumeBtn.textContent = 'Resume';
+        handoffCopy.textContent = 'Automation paused. Take control of the same Chromium window, fix the issue, then resume.';
+        if (reason === 'HUMAN_CONFIRMATION_REQUIRED') {
           tip.hidden = false;
-          tip.textContent = 'For review-only goals: do not click Confirm. Leave the review screen showing the nickname/amount, then Resume so the agent can extract and finish.';
-        } else if (state.intervention?.reason === 'POLICY_RISKY_CONTROL') {
+          const goalBit = state.intervention?.goal ? ` Goal: “${state.intervention.goal}”.` : '';
+          tip.textContent = 'Irreversible Confirm* step.' + goalBit + ' 1) Take Control  2) Click Confirm* in the bank window (or Back)  3) “I’ve confirmed — Resume”. Resume stays blocked until you leave the review screen.';
+          resumeBtn.textContent = "I've confirmed — Resume";
+          handoffCopy.textContent = 'Stopped before an irreversible change.';
+        } else if (reason === 'NO_PROGRESS') {
           tip.hidden = false;
-          tip.textContent = 'That control is blocked on purpose. Prefer extract + finish on the review screen, or complete staff verification only.';
-        } else if (state.intervention?.reason === 'INCOMPATIBLE_RESUME_STATE' || false) {
+          tip.textContent = 'No progress. Check the bank window, adjust if needed, then Resume.';
+        } else if (reason === 'POLICY_RISKY_CONTROL') {
           tip.hidden = false;
+          tip.textContent = 'That control is blocked. Prefer a safe action, then Resume.';
         } else {
           tip.hidden = true;
           tip.textContent = '';

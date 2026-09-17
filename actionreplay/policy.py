@@ -16,6 +16,71 @@ class AutomationError(RuntimeError):
         super().__init__(code)
 
 
+IRREVERSIBLE_CONFIRM_LABELS = frozenset(
+    {
+        "Confirm transfer",
+        "Confirm create",
+        "Confirm delete",
+        "Confirm creation",
+    }
+)
+
+# Review screens that show an irreversible Confirm* button. Resume after
+# HUMAN_CONFIRMATION_REQUIRED requires leaving these paths (operator clicked Confirm).
+CONFIRMATION_REVIEW_PATHS = frozenset(
+    {
+        "/review",
+        "/create-review",
+        "/transfer-review",
+        "/delete-confirm",
+    }
+)
+
+
+def is_irreversible_confirm_label(identity: str) -> bool:
+    return identity in IRREVERSIBLE_CONFIRM_LABELS or identity.startswith("Confirm ")
+
+
+def observation_irreversible_confirms(observation: dict) -> list[str]:
+    """Visible Confirm* labels that commit irreversible bank changes."""
+    found = []
+    for frame in observation.get("frames") or []:
+        for element in frame.get("elements") or []:
+            text = element.get("text") or ""
+            if is_irreversible_confirm_label(text):
+                found.append(text)
+    return found
+
+
+def goal_stops_before_irreversible_confirm(goal: str) -> bool:
+    """True when the goal is satisfied on the review/confirmation screen without committing.
+
+    Matches assignment-style goals such as "reach the confirmation screen" and
+    explicit review-only wording. Completing create/transfer/delete still requires human Confirm.
+    """
+    text = (goal or "").lower()
+    markers = (
+        "reach the confirmation",
+        "reach confirmation",
+        "confirmation screen",
+        "stop at review",
+        "stop on the",
+        "stop on transfer review",
+        "stop on create",
+        "stop on delete",
+        "do not confirm",
+        "don't confirm",
+        "without confirm",
+        "review only",
+        "prepare a ",
+        "prepare creating",
+        "prepare deleting",
+        "prepare opening",
+    )
+    return any(marker in text for marker in markers)
+
+
+
 class Policy:
     def __init__(self, config: PolicyConfig):
         self.config = config
@@ -52,6 +117,8 @@ class Policy:
         if action == "press" and key in {"Tab", "ArrowDown", "ArrowUp", "Escape"}:
             allowed_clicks = [*allowed_clicks, *self.config.safe_field_names]
         if action in {"click", "press"} and identity not in allowed_clicks:
+            if is_irreversible_confirm_label(identity):
+                raise AutomationError("HUMAN_CONFIRMATION_REQUIRED")
             raise AutomationError("POLICY_RISKY_CONTROL")
         if action in {"fill", "select"} and identity not in self.config.safe_field_names:
             raise AutomationError("POLICY_UNKNOWN_FIELD")

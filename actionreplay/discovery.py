@@ -27,7 +27,11 @@ from .models import (
     Step,
     Target,
 )
-from .policy import AutomationError
+from .policy import (
+    AutomationError,
+    goal_stops_before_irreversible_confirm,
+    observation_irreversible_confirms,
+)
 from .profile import runtime_profile
 from .replay import ReplayEngine, TerminalOutcome
 
@@ -195,12 +199,11 @@ For fill/select, value MUST be {"kind":"input","name":"<input_name>"} for invoca
 Use click for existing links rather than constructing data-dependent routes. No arbitrary code.
 Use extract to read output text into a named variable before finishing; choose currency for USD amounts.
 Use anchored output controls where offered. Observations include visible labels, frame routes, and control refs.
-Only finish after extracting requested values. For a review-only goal, extract the displayed review values. Do not click final submit.
-Staff verification and irreversible confirms (Verify staff authorization, Confirm transfer/create/delete/creation) are blocked for automation.
-When blocked, wait for the human operator; after Resume, continue from the new screenshot.
-On Sub-account review / Transfer review / Create or Delete review: extract the requested output (source=text on the output control), then kind=finish. Never click Confirm.
-If Confirm was already used and the review screen is gone, reopen the flow to the review screen, extract, and finish without confirming again.
-If the last executed action was extract and extracted_variables is non-empty, return kind=finish now.
+Only finish after extracting requested values.
+Irreversible Confirm* buttons (Confirm transfer / create / delete / creation) cannot be clicked by automation.
+If the goal is to reach the confirmation/review screen (or says do not confirm / prepare / stop at review): extract the review values and kind=finish while Confirm* may still be visible. Do not click Confirm.
+If the goal requires completing the change (create/transfer/delete/open after confirmation): when Confirm* is visible the runtime pauses for the human operator. After Resume (operator left the review screen), continue and finish on the confirmation/workspace result.
+If the last executed action was extract and extracted_variables is non-empty and no human Confirm is still required for the goal, return kind=finish now.
 Finish shape (replace names/refs): """ + FINISH_EXAMPLE + """
 Finish success conditions must use visible (or route) on CURRENT e-refs for approved headings/labels.
 Do not put monetary amounts, member IDs, or other sensitive values into success literals.
@@ -238,6 +241,12 @@ def completion_hint(history):
         return (
             "Extract the requested output first with action=extract on a visible output control, "
             "then call kind=finish."
+        )
+    if last.get("code") == "HUMAN_CONFIRMATION_REQUIRED":
+        return (
+            "Human confirmation was requested. After Resume, re-observe. "
+            "If Confirm is gone and a confirmation/workspace result is visible, extract if needed and kind=finish. "
+            "If still on the review screen, the operator has not confirmed yet."
         )
     if last.get("result") == "rejected" and last.get("code") == "MODEL_DECISION_SCHEMA_INVALID":
         return "Previous finish/action JSON was invalid. Retry with this exact finish shape: " + FINISH_EXAMPLE
@@ -320,9 +329,12 @@ def rejection_guidance(code):
             "on a CURRENT e-ref; do not embed amounts or member IDs as literals."
         ),
         "POLICY_RISKY_CONTROL": (
-            "That control is human-only (staff verification or irreversible confirm). "
-            "For review-only goals, do not Confirm — extract the review output and kind=finish. "
-            "If you need a human, wait for Take Control / Resume, then continue from a new observation."
+            "That control is blocked. Prefer a safe action, or extract + finish on a review-only goal."
+        ),
+        "HUMAN_CONFIRMATION_REQUIRED": (
+            "An irreversible Confirm* step was detected. Automation stopped for the human operator. "
+            "Take Control, click the Confirm button in the bank window (or abandon via Back), then Resume. "
+            "After Resume, continue from the new screenshot and finish when the goal is done."
         ),
     }.get(code, "Re-observe the current UI and choose a valid policy-compliant action.")
 
@@ -562,6 +574,12 @@ class DiscoveryEngine:
         history = []
         cycles = no_progress = 0
         started = time.monotonic()
+        review_only = goal_stops_before_irreversible_confirm(goal)
+        self.controller.context = {
+            "goal": goal,
+            "capability_name": name,
+            "mode": "discovery",
+        }
         try:
             self.evidence.event(
                 "model_preflight_started",
@@ -624,6 +642,35 @@ class DiscoveryEngine:
                     observation = await self.surface.observe()
                     refs = copy.deepcopy(self.surface.refs)
                     self.evidence.event("observation", controls=len(refs), frames=len(observation["frames"]))
+                    pending_confirms = observation_irreversible_confirms(observation)
+                    if (
+                        pending_confirms
+                        and not review_only
+                        and not self.surface.left_confirmation_review()
+                    ):
+                        # Completing goals: auto-stop at irreversible Confirm* for human commit.
+                        self.evidence.event(
+                            "irreversible_step_detected",
+                            labels=pending_confirms[:4],
+                            code="HUMAN_CONFIRMATION_REQUIRED",
+                        )
+
+                        async def confirmation_completed():
+                            return self.surface.left_confirmation_review()
+
+                        await self.controller.pause(
+                            "HUMAN_CONFIRMATION_REQUIRED", validator=confirmation_completed
+                        )
+                        no_progress = 0
+                        history.append(
+                            {
+                                "result": "human_confirmation",
+                                "code": "HUMAN_CONFIRMATION_REQUIRED",
+                                "guidance": rejection_guidance("HUMAN_CONFIRMATION_REQUIRED"),
+                                "labels": pending_confirms[:4],
+                            }
+                        )
+                        continue
                     cycles += 1
                     self.evidence.event("model_request", cycle=cycles)
                     remaining = max_seconds - (time.monotonic() - started - self.controller.paused_seconds)
@@ -645,6 +692,8 @@ class DiscoveryEngine:
                     if time.monotonic() - started - self.controller.paused_seconds >= max_seconds:
                         raise AutomationError("DISCOVERY_BUDGET_EXHAUSTED")
                     if decision.kind == "finish":
+                        if pending_confirms and not review_only:
+                            raise AutomationError("HUMAN_CONFIRMATION_REQUIRED")
                         missing = [
                             contract.variable
                             for contract in decision.outputs.values()
@@ -807,6 +856,23 @@ class DiscoveryEngine:
                         "OPENROUTER_REQUEST_REJECTED",
                     }:
                         raise
+                    if code == "HUMAN_CONFIRMATION_REQUIRED":
+                        async def confirmation_completed():
+                            # Same rule for every Confirm* step: operator must leave the review screen.
+                            return self.surface.left_confirmation_review()
+
+                        await self.controller.pause(
+                            code, validator=confirmation_completed
+                        )
+                        no_progress = 0
+                        history.append(
+                            {
+                                "result": "human_confirmation",
+                                "code": code,
+                                "guidance": rejection_guidance(code),
+                            }
+                        )
+                        continue
                     if code.startswith("POLICY_") or code in {
                         "UNEXPECTED_DIALOG",
                         "UNEXPECTED_POPUP",

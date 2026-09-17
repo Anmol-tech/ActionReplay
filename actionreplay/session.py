@@ -21,6 +21,7 @@ class SessionController:
         self.aborted = False
         self.extensions = {"steps": 0, "seconds": 0}
         self.paused_seconds = 0.0
+        self.context: dict = {}
 
     def state(self):
         return {
@@ -44,6 +45,9 @@ class SessionController:
             reason=reason,
             evidence=[snapshot],
             budget_exhausted=budget,
+            goal=self.context.get("goal"),
+            capability_name=self.context.get("capability_name"),
+            mode=self.context.get("mode"),
         )
         self.evidence.event(
             "intervention",
@@ -52,6 +56,9 @@ class SessionController:
             intervention_id=self.intervention.id,
             reason=reason,
             evidence=snapshot,
+            goal=self.intervention.goal,
+            capability_name=self.intervention.capability_name,
+            mode=self.intervention.mode,
         )
         deadline = asyncio.get_running_loop().time() + self.timeout
         try:

@@ -24,13 +24,13 @@ export OPENROUTER_MODEL='your-image-and-tool-capable-model-id'
 uv run actionreplay --config config.yaml serve
 ```
 
-Alternatively, populate a local ignored `.env` from `.env.example`, then load it into the shell before starting the server. The application deliberately does not load arbitrary environment files automatically. Never commit a key or paste it into a goal.
+Alternatively, populate a local ignored `.env` from `.env.example`. `serve` and other CLI commands load that file from the working directory (or next to `--config`) when present; values already exported in the shell still win. Never commit a key or paste it into a goal.
 
 OpenRouter discovery preflights `/models` for image input and tool-calling support. It validates every returned action with Pydantic, requires provider parameter support, and requests providers that disallow data collection. An unavailable compatible provider produces a bounded failure/intervention. There is no silent substitute model.
 
 The mock listens on `127.0.0.1:8000`; the coordinator/operator page uses `127.0.0.1:8001`. `serve` prints the local operator URL. The coordinator accepts requests only from loopback hosts and the operator page's own origin; it does not use a URL token. Browser outputs remain in process memory and local-origin responses only.
 
-The demo bank is a nested-frame **LegacyBank 1.0** teller workstation with a real in-memory ledger: member search, balances, transfers with dual-control verification, sub-account prep, create/delete member, confirmation references, and insufficient-funds / duplicate-member errors. Automation still cannot click irreversible confirms or staff authorization.
+The demo bank is a nested-frame **LegacyBank 1.0** teller workstation with a real in-memory ledger: member search, balances, transfers, sub-account prep, create/delete member, confirmation references, and insufficient-funds / duplicate-member errors. Automation still cannot click irreversible confirms.
 
 ### Start discovery or replay from the UI
 
@@ -91,28 +91,14 @@ uv run actionreplay discover \
 
 The agent chooses the sequence from screenshots and rendered controls. The banking mock provides screens/buttons; it does not provide a discovery recipe. Final account creation is blocked by policy.
 
-### Harder flows (human during discovery)
+### Human confirmation on irreversible steps
 
-Transfer / create / delete require **staff verification** (`Verify staff authorization`) that automation cannot click. Irreversible **Confirm transfer|create|delete** buttons are also policy-blocked. Typical loop:
+Automation never clicks irreversible **Confirm*** buttons. Behavior depends on the goal:
 
-1. Start discovery with a review-only goal (operator UI presets, or CLI below).
-2. When the run pauses on `STAFF_VERIFICATION_REQUIRED` or `POLICY_RISKY_CONTROL`, **Take Control**.
-3. In Chromium click **Verify staff authorization** (and later any allowed navigation you need).
-4. **Resume** so the model continues, extracts review values, and finishes without confirming.
+- **Reach confirmation / review-only** (e.g. assignment-style “reach the confirmation screen”, “do not confirm”): discovery may finish on the review screen while Confirm* is still visible.
+- **Completing goals** (create/transfer/delete and finish after confirmation): when Confirm* appears, discovery auto-pauses with `HUMAN_CONFIRMATION_REQUIRED`. Take Control → click Confirm in Chromium → **I've confirmed — Resume** (rejected while still on the review screen).
 
-```bash
-uv run actionreplay discover \
-  --goal 'Prepare a funds transfer for the supplied member using from_account and amount. After staff verification, stop on transfer review and return the displayed amount. Do not confirm.' \
-  --target http://127.0.0.1:8000 \
-  --inputs-file examples/transfer.json \
-  --capability transfer-review
-
-uv run actionreplay discover \
-  --goal 'Prepare creating a new member using new_member_id and display_name. After staff verification, stop on create review and return the new member ID. Do not confirm.' \
-  --target http://127.0.0.1:8000 \
-  --inputs-file examples/create-member.json \
-  --capability create-member-review
-```
+Replay uses the same Confirm* block and handoff if a recorded step attempts it.
 
 ### Assisted replay on UI drift
 

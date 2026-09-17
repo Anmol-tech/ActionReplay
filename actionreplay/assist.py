@@ -8,7 +8,6 @@ from .policy import AutomationError
 ASSIST_SYSTEM = """You are assisting a FAILED deterministic replay of a bank UI workflow.
 Take exactly ONE policy-safe action to unblock the current step. Do not finish.
 Do not click irreversible confirms (Confirm transfer, Confirm create, Confirm delete, Confirm creation).
-Do not click Verify staff authorization — that is human-only.
 Use only the perform tool with kind=action. Targets must be current observation e-refs.
 Prefer clicking a visibly equivalent control when a label drifted.
 """
@@ -57,7 +56,6 @@ class AssistedFallback:
                 "Confirm create",
                 "Confirm delete",
                 "Confirm creation",
-                "Verify staff authorization",
             ],
         }
         try:

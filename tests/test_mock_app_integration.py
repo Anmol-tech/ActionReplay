@@ -39,7 +39,6 @@ async def test_subaccount_preserves_primary_balance_and_renders():
 async def test_transfer_updates_both_accounts_and_activity():
     app = create_app()
     async with await client_for(app) as client:
-        await client.get("/verify?next=/transfer&member_id=00123")
         await client.get("/transfer-review?member_id=00123&from_account=Savings&to_account=Checking&amount=25.00")
         response = await client.post("/transfer-commit")
         assert "Confirmation reference" in (await client.get(response.headers["location"])).text
@@ -60,13 +59,19 @@ async def test_invalid_transfer_and_duplicate_create_are_visible():
 
 
 @pytest.mark.asyncio
-async def test_verification_is_scoped_to_operation():
+async def test_sensitive_flows_open_without_staff_gate():
     app = create_app()
     async with await client_for(app) as client:
-        assert "Staff verification required" in (await client.get("/transfer?member_id=00123")).text
-        await client.get("/verify?next=/transfer&member_id=00123")
-        assert "Transfer funds" in (await client.get("/transfer?member_id=00123")).text
-        assert "Staff verification required" in (await client.get("/create-member")).text
+        transfer = (await client.get("/transfer?member_id=00123")).text
+        create = (await client.get("/create-member")).text
+        delete = (await client.get("/delete-member?member_id=00123")).text
+        for body in (transfer, create, delete):
+            assert "Staff verification required" not in body
+            assert "Verify staff authorization" not in body
+        assert "Transfer funds" in transfer
+        assert "Create member" in create
+        assert "Delete member" in delete
+
 
 @pytest.mark.asyncio
 async def test_bank_pages_use_normal_customer_facing_language():
@@ -81,5 +86,5 @@ async def test_bank_pages_use_normal_customer_facing_language():
     lowered = combined.lower()
     for term in ("actionreplay", "automation", "live browser", "human operator", "synthetic"):
         assert term not in lowered
-    assert "Staff verification required" in combined
-    assert "Verify staff authorization" in combined
+    assert "Transfer funds" in combined
+    assert "Create member" in combined

@@ -108,27 +108,6 @@ async def test_handoff_same_session(tmp_path, mock_server, scenario, manual_labe
         await surface.close()
 
 
-async def test_staff_verification_handoff(tmp_path, mock_server):
-    config, evidence, controller, surface = await runtime(tmp_path, mock_server("normal"))
-    try:
-        task = asyncio.create_task(
-            ReplayEngine(config, surface, evidence, controller).run(
-                transfer_review_capability(), {"member_id": "00123"}
-            )
-        )
-        intervention = await wait_intervention(controller)
-        assert intervention.reason == "STAFF_VERIFICATION_REQUIRED"
-        controller.take_control(intervention.id)
-        frame = surface.page.frame(name="workspace")
-        await frame.get_by_role("link", name="Verify staff authorization").click()
-        controller.resume(intervention.id)
-        result = await task
-        assert (result.status, result.code) == ("success", "OK"), result
-        assert result.outputs["amount"] == "25.00"
-    finally:
-        await surface.close()
-
-
 async def test_assisted_fallback_on_drift(tmp_path, mock_server):
     class ScriptedAssist:
         def __init__(self, surface):
@@ -145,18 +124,9 @@ async def test_assisted_fallback_on_drift(tmp_path, mock_server):
     config, evidence, controller, surface = await runtime(tmp_path, mock_server("drift"))
     assist = ScriptedAssist(surface)
     try:
-        task = asyncio.create_task(
-            ReplayEngine(config, surface, evidence, controller, assist=assist).run(
-                transfer_review_capability(), {"member_id": "00123"}
-            )
+        result = await ReplayEngine(config, surface, evidence, controller, assist=assist).run(
+            transfer_review_capability(), {"member_id": "00123"}
         )
-        intervention = await wait_intervention(controller)
-        assert intervention.reason == "STAFF_VERIFICATION_REQUIRED"
-        controller.take_control(intervention.id)
-        frame = surface.page.frame(name="workspace")
-        await frame.get_by_role("link", name="Verify staff authorization").click()
-        controller.resume(intervention.id)
-        result = await task
         assert (result.status, result.code) == ("success", "OK"), result
         assert assist.calls == 1
         assert result.outputs["amount"] == "25.00"

@@ -31,7 +31,7 @@ async def test_policy_blocks_real_side_effect(tmp_path, mock_server):
             frame_path=balance_capability().targets["search_button"].frame_path,
             locator=Locator(strategy="role", role="button", text=literal("Confirm creation")),
         )
-        with pytest.raises(AutomationError, match="POLICY_RISKY_CONTROL"):
+        with pytest.raises(AutomationError, match="HUMAN_CONFIRMATION_REQUIRED"):
             await surface.execute_action(
                 Click(id="commit", action="click", target="commit"), {"commit": target}, {}, {}
             )
@@ -111,6 +111,47 @@ async def test_invalid_resume_stays_paused(tmp_path, mock_server):
             controller.take_control("old-intervention")
         controller.abort(intervention.id)
         assert (await task).code == "OPERATOR_ABORTED"
+    finally:
+        await surface.close()
+
+
+async def test_human_confirmation_resume_requires_leaving_review(tmp_path, mock_server):
+    """Resume after Confirm handoff is rejected while still on the review screen."""
+    config, evidence, controller, surface = await runtime(tmp_path, mock_server())
+    try:
+        await surface.page.goto(
+            f"{config.policy.base_url}/create-review?new_member_id=00499&display_name=Test"
+        )
+        assert surface.left_confirmation_review() is False
+
+        async def confirmation_completed():
+            return surface.left_confirmation_review()
+
+        pause_task = asyncio.create_task(
+            controller.pause("HUMAN_CONFIRMATION_REQUIRED", validator=confirmation_completed)
+        )
+        for _ in range(100):
+            if controller.intervention is not None:
+                break
+            await asyncio.sleep(0.025)
+        intervention = controller.intervention
+        assert intervention is not None
+        assert intervention.reason == "HUMAN_CONFIRMATION_REQUIRED"
+
+        controller.take_control(intervention.id)
+        controller.resume(intervention.id)
+        for _ in range(100):
+            if "resume_rejected" in (evidence.path / "events.jsonl").read_text():
+                break
+            await asyncio.sleep(0.025)
+        assert controller.owner == "PAUSED" and not pause_task.done()
+
+        controller.take_control(intervention.id)
+        await surface.page.goto(f"{config.policy.base_url}/workspace")
+        assert surface.left_confirmation_review() is True
+        controller.resume(intervention.id)
+        await asyncio.wait_for(pause_task, timeout=5)
+        assert controller.owner == "AUTOMATION"
     finally:
         await surface.close()
 

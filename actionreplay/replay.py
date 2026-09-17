@@ -170,10 +170,21 @@ class ReplayEngine:
                 snapshot = self.evidence.snapshot(await self.surface.capture_sanitized_evidence())
                 self.evidence.event("action_blocked", step_id=step.id, code=code, evidence=snapshot)
 
-                async def validator():
-                    return await self.resume_valid(step, capability, inputs)
+                if code == "HUMAN_CONFIRMATION_REQUIRED":
 
-                await self.controller.pause(code, step.id, validator=validator)
+                    async def confirmation_validator():
+                        # Same handoff as discovery: operator must leave the Confirm* review screen.
+                        if not self.surface.left_confirmation_review():
+                            return False
+                        return await self.surface.resume_ready()
+
+                    await self.controller.pause(code, step.id, validator=confirmation_validator)
+                else:
+
+                    async def validator():
+                        return await self.resume_valid(step, capability, inputs)
+
+                    await self.controller.pause(code, step.id, validator=validator)
                 if step.postconditions and await self.conditions(step.postconditions, capability, inputs):
                     self.evidence.event("step_completed_by_human", step_id=step.id)
                     return
@@ -181,6 +192,11 @@ class ReplayEngine:
     async def run(self, capability: Capability, inputs):
         try:
             inputs = capability.validate_inputs(inputs)
+            self.controller.context = {
+                "goal": capability.description,
+                "capability_name": capability.capability_id,
+                "mode": "replay",
+            }
             if (
                 capability.application.family != self.config.application_family
                 or self.config.application_version not in capability.application.versions

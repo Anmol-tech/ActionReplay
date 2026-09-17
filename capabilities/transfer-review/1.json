@@ -4,7 +4,7 @@
   "revision": 1,
   "name": "transfer-review",
   "description": "Capability recorded from verified UI actions",
-  "source_run_id": "9cf64668d02f4b29844c950f04b03e26",
+  "source_run_id": "43ea985ede484cc2b49c08e157b0fed9",
   "application": {
     "family": "legacy-bank",
     "surface": "browser",
@@ -1192,7 +1192,7 @@
   "success": [
     {
       "kind": "visible",
-      "target": "t_38164b7f52ee",
+      "target": "t_270da7583d38",
       "value": null,
       "variable": null,
       "conditions": []
