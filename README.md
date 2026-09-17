@@ -218,4 +218,4 @@ uv run ruff check actionreplay tests scripts
 
 Tests launch local servers and Chromium. They need permission to bind loopback ports and launch a browser. Integration tests cover replay with model access prohibited, alternate inputs, errors, handoff, recording, configuration, and evidence redaction. See `IMPLEMENTATION.md` for coverage and outstanding live verification.
 
-Before submission, generate genuine OpenRouter evidence, review the public files for secrets, and follow the assignment's publication/submission instructions. No repository has been published and no email has been sent by this implementation task.
+Before submission, review the public files for secrets and email the repository URL to the address in the assignment brief. This repository is public at https://github.com/Anmol-tech/ActionReplay; the submission email itself is left for the author.

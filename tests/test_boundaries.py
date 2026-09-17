@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 import pytest
 from playwright.async_api import Error as PlaywrightError
@@ -156,6 +157,47 @@ async def test_human_confirmation_resume_requires_leaving_review(tmp_path, mock_
         await surface.close()
 
 
+async def test_human_create_confirm_autocompletes_discovery(tmp_path, mock_server):
+    """After Confirm create, discovery should finish without another model loop."""
+    from actionreplay.discovery import DiscoveryEngine, Recorder
+
+    config, evidence, controller, surface = await runtime(tmp_path, mock_server())
+    try:
+        await surface.page.goto(
+            f"{config.policy.base_url}/create-review?new_member_id=00499&display_name=Test"
+        )
+
+        async def confirmation_completed():
+            return surface.left_confirmation_review()
+
+        pause_task = asyncio.create_task(
+            controller.pause("HUMAN_CONFIRMATION_REQUIRED", validator=confirmation_completed)
+        )
+        for _ in range(100):
+            if controller.intervention is not None:
+                break
+            await asyncio.sleep(0.025)
+        intervention = controller.intervention
+        assert intervention is not None
+
+        controller.take_control(intervention.id)
+        await surface.page.get_by_role("button", name="Confirm create").click()
+        await surface.page.wait_for_url("**/workspace**")
+        controller.resume(intervention.id)
+        await asyncio.wait_for(pause_task, timeout=5)
+
+        engine = DiscoveryEngine(config, surface, evidence, controller, client=None)
+        recorder = Recorder({"new_member_id": "00499", "display_name": "Test"}, config)
+        result = await engine._finish_after_human_confirm(
+            recorder, "create-member", tmp_path / "capabilities"
+        )
+        assert result is not None
+        assert result.code == "OK"
+        assert "human_confirm_autocompleted" in (evidence.path / "events.jsonl").read_text()
+    finally:
+        await surface.close()
+
+
 async def test_frame_request_policy_applies_to_popups(tmp_path, mock_server):
     config, evidence, controller, surface = await runtime(tmp_path, mock_server())
     try:
@@ -165,5 +207,35 @@ async def test_frame_request_policy_applies_to_popups(tmp_path, mock_server):
         assert surface.blocked in {"POLICY_ROUTE_BLOCKED", "UNEXPECTED_POPUP"}
         with pytest.raises(AutomationError):
             surface.assert_owner()
+    finally:
+        await surface.close()
+
+
+async def test_create_member_empty_inputs_are_business_outcome(tmp_path, mock_server):
+    artifact = Capability.model_validate_json(
+        (Path(__file__).resolve().parents[1] / "capabilities/create-member/1.json").read_text()
+    )
+    config, evidence, controller, surface = await runtime(tmp_path, mock_server())
+    try:
+        result = await ReplayEngine(config, surface, evidence, controller).run(
+            artifact, {"new_member_id": "", "display_name": ""}
+        )
+        assert result.status == "business_outcome"
+        assert result.code == "INVALID_MEMBER_DRAFT"
+    finally:
+        await surface.close()
+
+
+async def test_create_member_duplicate_is_business_outcome(tmp_path, mock_server):
+    artifact = Capability.model_validate_json(
+        (Path(__file__).resolve().parents[1] / "capabilities/create-member/1.json").read_text()
+    )
+    config, evidence, controller, surface = await runtime(tmp_path, mock_server())
+    try:
+        result = await ReplayEngine(config, surface, evidence, controller).run(
+            artifact, {"new_member_id": "00123", "display_name": "Duplicate"}
+        )
+        assert result.status == "business_outcome"
+        assert result.code == "MEMBER_ALREADY_EXISTS"
     finally:
         await surface.close()

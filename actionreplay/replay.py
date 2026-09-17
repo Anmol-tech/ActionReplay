@@ -10,6 +10,7 @@ from playwright.async_api import TimeoutError as BrowserTimeout
 from .evidence import EvidenceError
 from .models import Capability, RunResult
 from .policy import AutomationError
+from .profile import runtime_profile
 
 
 class TerminalOutcome(Exception):
@@ -192,6 +193,18 @@ class ReplayEngine:
     async def run(self, capability: Capability, inputs):
         try:
             inputs = capability.validate_inputs(inputs)
+            # Trusted bank statuses stay current even for older artifacts.
+            runtime_targets, runtime_outcomes = runtime_profile()
+            known_codes = {rule.code for rule in capability.outcomes}
+            capability = capability.model_copy(
+                update={
+                    "targets": {**runtime_targets, **capability.targets},
+                    "outcomes": [
+                        *capability.outcomes,
+                        *[rule for rule in runtime_outcomes if rule.code not in known_codes],
+                    ],
+                }
+            )
             self.controller.context = {
                 "goal": capability.description,
                 "capability_name": capability.capability_id,

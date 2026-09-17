@@ -142,6 +142,10 @@ class PolicyConfig(Model):
         "Confirmation reference",
         "Insufficient funds",
         "Invalid account combination",
+        "Invalid amount",
+        "Invalid member draft",
+        "Invalid member ID",
+        "Invalid nickname",
         "Member already exists",
     ]
     approved_attributes: dict[str, list[str]] = {
