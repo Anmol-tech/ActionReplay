@@ -261,8 +261,9 @@
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
     }
     textarea { resize: vertical; min-height: 88px; }
-    #inputs, #replay-inputs, pre { font: 13px/1.55 var(--mono); }
+    #inputs, #replay-inputs, #goal, pre { font: 13px/1.55 var(--mono); }
     #inputs, #replay-inputs { min-height: 100px; }
+    #goal { min-height: 88px; font-family: inherit; }
     .cta-row {
       display: flex;
       flex-wrap: wrap;
@@ -450,35 +451,40 @@
         <div class="panel-intro">
           <div>
             <h2 id="discovery-title">New discovery</h2>
-            <p>Describe the goal. The agent explores the allowed app and saves a reusable capability.</p>
+            <p>Write any goal for the allowlisted bank app, or start from a preset. The agent explores and saves a reusable capability.</p>
           </div>
           <div class="helper-card"><p id="model" class="notice">Connecting to the server…</p></div>
         </div>
         <form id="discovery-form" class="form-grid" autocomplete="off">
           <fieldset id="discovery-fields" disabled>
             <div class="field">
-              <label for="goal-preset">Goal preset</label>
+              <label for="goal-preset">Start from</label>
               <select id="goal-preset">
-                <option value="savings">Savings balance (easy)</option>
-                <option value="subaccount">Sub-account → confirmation screen</option>
-                <option value="transfer">Transfer → review screen</option>
-                <option value="create">Create member → review screen</option>
-                <option value="delete">Delete member → review screen</option>
-                <option value="transfer-commit">Transfer (human Confirm)</option>
-                <option value="create-commit">Create member (human Confirm)</option>
-                <option value="delete-commit">Delete member (human Confirm)</option>
-                <option value="subaccount-commit">Sub-account (human Confirm)</option>
+                <option value="custom">Custom — write your own goal</option>
+                <option value="savings" selected>Preset: Savings balance (easy)</option>
+                <option value="subaccount">Preset: Sub-account → confirmation screen</option>
+                <option value="transfer">Preset: Transfer → review screen</option>
+                <option value="create">Preset: Create member → review screen</option>
+                <option value="delete">Preset: Delete member → review screen</option>
+                <option value="transfer-commit">Preset: Transfer (human Confirm)</option>
+                <option value="create-commit">Preset: Create member (human Confirm)</option>
+                <option value="delete-commit">Preset: Delete member (human Confirm)</option>
+                <option value="subaccount-commit">Preset: Sub-account (human Confirm)</option>
               </select>
-              <small>Review/confirmation-screen goals finish without Confirm. Completing goals pause automatically so you click Confirm in the bank window.</small>
+              <small>Pick a preset or <strong>Custom</strong>. You can always edit the Goal box; editing switches to Custom. Target must stay on LegacyBank (not Google).</small>
             </div>
-            <div class="field"><label for="goal">Goal</label><textarea id="goal" name="goal" required>Find the savings balance for the supplied member</textarea></div>
+            <div class="field">
+              <label for="goal">Goal</label>
+              <textarea id="goal" name="goal" required rows="4" placeholder="e.g. Find the checking balance for the supplied member and return it">Find the savings balance for the supplied member</textarea>
+              <small id="goal-help">Free-form natural language on the bank mock. Name the same keys you put in Inputs. Say “do not confirm” / “stop at review” to finish on the review screen; say “finish after confirmation” to pause for human Confirm*. Supported flows: search, savings/checking balance, transfer, create/delete member, sub-account.</small>
+            </div>
             <div class="row">
               <div class="field"><label for="target">Target URL</label><input id="target" name="target" type="url" required><small>Must match the server allowlist.</small></div>
-              <div class="field"><label for="capability">Capability name</label><input id="capability" name="capability" value="savings-balance" pattern="[a-z][a-z0-9\-]*" required><small>e.g. savings-balance</small></div>
+              <div class="field"><label for="capability">Capability name</label><input id="capability" name="capability" value="savings-balance" pattern="[a-z][a-z0-9\-]*" required><small>Saved as capabilities/&lt;name&gt;/N.json</small></div>
             </div>
             <div class="field"><label for="inputs">Inputs (JSON)</label><textarea id="inputs" name="inputs" spellcheck="false" aria-describedby="inputs-help">{
   "member_id": "00123"
-}</textarea><small id="inputs-help">Quote member IDs to keep leading zeros. Use {} if none.</small></div>
+}</textarea><small id="inputs-help">Keys become typed parameters. Quote member IDs to keep leading zeros. Use {} if none.</small></div>
             <details class="advanced">
               <summary>Limits &amp; budget</summary>
               <div class="row">
@@ -553,6 +559,12 @@
     let launchedRun = null, shownResult = null, polling = false, catalog = [], selectedArtifact = null, launchedMode = null;
 
     const GOAL_PRESETS = {
+      custom: {
+        goal: '',
+        capability: 'custom-flow',
+        inputs: '{\n  "member_id": "00123"\n}',
+        keepGoal: true,
+      },
       savings: {
         goal: 'Find the savings balance for the supplied member',
         capability: 'savings-balance',
@@ -601,14 +613,30 @@
     };
 
     function applyGoalPreset() {
-      const preset = GOAL_PRESETS[$('goal-preset').value];
+      const key = $('goal-preset').value;
+      const preset = GOAL_PRESETS[key];
       if (!preset) return;
-      $('goal').value = preset.goal;
-      $('capability').value = preset.capability;
-      $('inputs').value = preset.inputs;
+      if (key === 'custom') {
+        // Keep whatever the user already typed; only seed empty fields.
+        if (!$('goal').value.trim()) {
+          $('goal').value = '';
+          $('goal').focus();
+        }
+        if (!$('capability').value.trim() || $('capability').value === 'savings-balance') {
+          $('capability').value = preset.capability;
+        }
+      } else {
+        $('goal').value = preset.goal;
+        $('capability').value = preset.capability;
+        $('inputs').value = preset.inputs;
+      }
     }
 
     $('goal-preset').addEventListener('change', applyGoalPreset);
+    // Editing the goal manually marks the run as custom so the next preset change is intentional.
+    $('goal').addEventListener('input', () => {
+      if ($('goal-preset').value !== 'custom') $('goal-preset').value = 'custom';
+    });
 
     function syncChrome() {
       document.body.dataset.connected = connected ? "true" : "false";

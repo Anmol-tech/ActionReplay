@@ -87,7 +87,7 @@ async def test_cli_operator_smoke(tmp_path):
                 assert await page.get_by_label("Goal", exact=True).input_value() == (
                     "Find the savings balance for the supplied member"
                 )
-                assert await page.get_by_label("Goal preset").input_value() == "savings"
+                assert await page.get_by_label("Start from").input_value() == "savings"
                 assert await page.get_by_label("Target URL").input_value() == (
                     f"http://127.0.0.1:{mock_port}"
                 )
