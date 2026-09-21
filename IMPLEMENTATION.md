@@ -27,7 +27,7 @@ This preserves the agreed scope and distinguishes implementation from live verif
 | Persistence failures | Evidence-write failure stops actions; incomplete manifests remain incomplete; fault-injection test. |
 | Export and retention | Completed-run export/scanning and explicit retention cleanup; active runs/capabilities/exports preserved. |
 | CLI | serve/discover/replay/export-evidence/cleanup/schema; actual CLI receives expected JSON from coordinator. |
-| Required deliverables | README.md, REPORT.md, schemas, examples, /evidence included. No publication/email performed. |
+| Required deliverables | README.md, REPORT.md, schemas, examples, /evidence included. |
 | Heterogeneity and tenants | Surface seam, compatibility declarations, documented reviewed overrides; design only beyond the browser profile. |
 
 ## Evidence provenance

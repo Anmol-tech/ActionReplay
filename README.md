@@ -19,7 +19,7 @@ uv run actionreplay replay \
 
 **Why Confirm\* is human-only:** irreversible bank commits (Confirm transfer/create/delete/creation) are policy-blocked for automation. Completing goals pause on the review screen; the operator clicks Confirm in the same Chromium window, then resumes. That keeps discovery/replay cheap and reviewable while still supporting real commits.
 
-Public repo: https://github.com/Anmol-tech/ActionReplay — email that URL to `assignments@interface.ai` (see [`SUBMISSION.md`](SUBMISSION.md)).
+Public repo: https://github.com/Anmol-tech/ActionReplay
 
 Python 3.11+, Playwright, Pydantic, FastAPI, OpenRouter. No target business APIs, hidden application state, task-specific discovery scripts, or generated executable code.
 
@@ -270,4 +270,4 @@ uv run ruff check actionreplay tests scripts
 
 Tests launch local servers and Chromium. They need permission to bind loopback ports and launch a browser. Integration tests cover replay with model access prohibited, alternate inputs, errors, handoff, recording, configuration, and evidence redaction. See `IMPLEMENTATION.md` for coverage and outstanding live verification.
 
-Before submission, review the public files for secrets and email the repository URL to the address in the assignment brief. This repository is public at https://github.com/Anmol-tech/ActionReplay; the submission email itself is left for the author.
+Before sharing the repo, review public files for secrets. This repository is public at https://github.com/Anmol-tech/ActionReplay.
