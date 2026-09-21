@@ -2,6 +2,25 @@
 
 Discover a UI workflow with an LLM, save a typed capability, and replay it without a model. When automation cannot safely continue, a local operator takes control of the **same live Chromium session**.
 
+## Reviewer path (start here)
+
+1. **Live evidence** — Open [`evidence/index.md`](evidence/index.md). Prefer the current-mock trio: live discovery `OK`, alternate-input replay `OK`, and `MEMBER_NOT_FOUND`. Also see the assisted-fallback drift run when present.
+2. **Design write-up** — [`REPORT.md`](REPORT.md) (seven required headings).
+3. **Run locally** (no model key needed for replay):
+
+```bash
+uv sync --extra dev
+uv run playwright install chromium
+uv run actionreplay serve
+uv run actionreplay replay \
+  --artifact examples/offline-balance.json \
+  --inputs-file examples/member-b.json
+```
+
+**Why Confirm\* is human-only:** irreversible bank commits (Confirm transfer/create/delete/creation) are policy-blocked for automation. Completing goals pause on the review screen; the operator clicks Confirm in the same Chromium window, then resumes. That keeps discovery/replay cheap and reviewable while still supporting real commits.
+
+Public repo: https://github.com/Anmol-tech/ActionReplay — email that URL to `assignments@interface.ai` (see [`SUBMISSION.md`](SUBMISSION.md)).
+
 Python 3.11+, Playwright, Pydantic, FastAPI, OpenRouter. No target business APIs, hidden application state, task-specific discovery scripts, or generated executable code.
 
 **Evidence status:** `/evidence/` includes a genuine OpenRouter discovery run (`provenance: live`) plus deterministic replay with alternate inputs and a `MEMBER_NOT_FOUND` outcome. Offline scripted-model demos remain for handoff/transient paths. Production discovery always calls OpenRouter; test doubles are confined to tests and the offline evidence builder.
@@ -109,6 +128,18 @@ Replay stays model-free by default. Set `execution.assisted_fallback: true` (and
 uv run actionreplay serve --scenario drift
 # Replay a transfer-review capability from the operator UI
 ```
+
+Checked-in stretch evidence (live OpenRouter, one assist step on drift):
+
+```bash
+uv run python scripts/build_assist_evidence.py
+```
+
+See `/evidence/index.md` for the exported assist run.
+
+### Agent-facing capability catalog
+
+`GET http://127.0.0.1:8001/capabilities` returns recorded/fixture capabilities with latest revision, typed inputs/outputs, and how to invoke via `POST /runs` (`mode=replay`). This is a thin catalog for a calling agent—not a remote multi-tenant marketplace.
 
 ## Run without live services
 

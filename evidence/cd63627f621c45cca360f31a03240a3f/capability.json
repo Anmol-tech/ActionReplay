@@ -1,0 +1,1289 @@
+{
+  "schema_version": "1.0",
+  "capability_id": "offline-transfer-review",
+  "revision": 1,
+  "name": "Offline transfer review",
+  "description": "Hand-authored fixture for transfer review / assisted drift",
+  "source_run_id": "offline-manual-reference",
+  "application": {
+    "family": "legacy-bank",
+    "surface": "browser",
+    "versions": [
+      "1.0"
+    ],
+    "entry_route": "/"
+  },
+  "inputs": {
+    "member_id": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "enum": [],
+      "pattern": null,
+      "minimum": null,
+      "maximum": null,
+      "variable": null
+    }
+  },
+  "outputs": {
+    "amount": {
+      "type": "string",
+      "required": true,
+      "sensitive": true,
+      "enum": [],
+      "pattern": null,
+      "minimum": null,
+      "maximum": null,
+      "variable": "amount"
+    }
+  },
+  "targets": {
+    "status_member_not_found": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Member not found"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_account_not_found": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Account not found"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_invalid_member_id": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Invalid member ID"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_invalid_member_draft": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Invalid member draft"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_member_already_exists": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Member already exists"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_invalid_nickname": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Invalid nickname"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_invalid_amount": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Invalid amount"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_insufficient_funds": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Insufficient funds"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_invalid_account_combination": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Invalid account combination"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_permission_denied": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Permission denied"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_session_expired": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Session expired"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_transient_failure": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Temporary service failure"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_known_interstitial": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Maintenance notice"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "status_unexpected_dialog": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "text",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Unexpected verification required"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted runtime status"
+    },
+    "known_continue": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Continue"
+        },
+        "role": "link",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Trusted interstitial dismissal"
+    },
+    "search_input": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "label",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Member ID"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "search_button": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Search"
+        },
+        "role": "button",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "open_member": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Open member"
+        },
+        "role": "link",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "transfer_link": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Transfer funds"
+        },
+        "role": "link",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "amount_input": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "label",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Amount"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "review_transfer": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Review transfer"
+        },
+        "role": "button",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "transfer_heading": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "role",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Transfer review"
+        },
+        "role": "heading",
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": null
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    },
+    "amount_out": {
+      "frame_path": [
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "shell",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        },
+        {
+          "strategy": "attribute",
+          "text": null,
+          "role": null,
+          "name": "name",
+          "value": "workspace",
+          "child_role": null,
+          "child_name": null,
+          "child_tag": null
+        }
+      ],
+      "locator": {
+        "strategy": "anchored",
+        "text": {
+          "kind": "literal",
+          "name": null,
+          "value": "Amount"
+        },
+        "role": null,
+        "name": null,
+        "value": null,
+        "child_role": null,
+        "child_name": null,
+        "child_tag": "output"
+      },
+      "scope": null,
+      "description": "Offline fixture target"
+    }
+  },
+  "steps": [
+    {
+      "id": "enter_member",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "search_input",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [],
+      "action": "fill",
+      "target": "search_input",
+      "value": {
+        "kind": "input",
+        "name": "member_id",
+        "value": null
+      }
+    },
+    {
+      "id": "search",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "search_button",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [
+        {
+          "kind": "visible",
+          "target": "open_member",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "action": "click",
+      "target": "search_button"
+    },
+    {
+      "id": "open",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "open_member",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [
+        {
+          "kind": "visible",
+          "target": "transfer_link",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "action": "click",
+      "target": "open_member"
+    },
+    {
+      "id": "open_transfer",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "transfer_link",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [
+        {
+          "kind": "visible",
+          "target": "amount_input",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "action": "click",
+      "target": "transfer_link"
+    },
+    {
+      "id": "review",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "review_transfer",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [
+        {
+          "kind": "visible",
+          "target": "transfer_heading",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "action": "click",
+      "target": "review_transfer"
+    },
+    {
+      "id": "read_amount",
+      "preconditions": [
+        {
+          "kind": "visible",
+          "target": "transfer_heading",
+          "value": null,
+          "variable": null,
+          "conditions": []
+        }
+      ],
+      "postconditions": [],
+      "action": "extract",
+      "target": "amount_out",
+      "variable": "amount",
+      "source": "text",
+      "conversion": "text"
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "condition": {
+        "kind": "visible",
+        "target": "status_member_not_found",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "ACCOUNT_NOT_FOUND",
+      "condition": {
+        "kind": "visible",
+        "target": "status_account_not_found",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "INVALID_MEMBER_ID",
+      "condition": {
+        "kind": "visible",
+        "target": "status_invalid_member_id",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "INVALID_MEMBER_DRAFT",
+      "condition": {
+        "kind": "visible",
+        "target": "status_invalid_member_draft",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "MEMBER_ALREADY_EXISTS",
+      "condition": {
+        "kind": "visible",
+        "target": "status_member_already_exists",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "INVALID_NICKNAME",
+      "condition": {
+        "kind": "visible",
+        "target": "status_invalid_nickname",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "INVALID_AMOUNT",
+      "condition": {
+        "kind": "visible",
+        "target": "status_invalid_amount",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "INSUFFICIENT_FUNDS",
+      "condition": {
+        "kind": "visible",
+        "target": "status_insufficient_funds",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "INVALID_ACCOUNT_COMBINATION",
+      "condition": {
+        "kind": "visible",
+        "target": "status_invalid_account_combination",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "business_outcome",
+      "recovery": []
+    },
+    {
+      "code": "PERMISSION_DENIED",
+      "condition": {
+        "kind": "visible",
+        "target": "status_permission_denied",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "failure",
+      "recovery": []
+    },
+    {
+      "code": "SESSION_EXPIRED",
+      "condition": {
+        "kind": "visible",
+        "target": "status_session_expired",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "intervention",
+      "recovery": []
+    },
+    {
+      "code": "TRANSIENT_FAILURE",
+      "condition": {
+        "kind": "visible",
+        "target": "status_transient_failure",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "recover",
+      "recovery": [
+        {
+          "id": "dismiss_transient_failure",
+          "preconditions": [],
+          "postconditions": [],
+          "action": "click",
+          "target": "known_continue"
+        }
+      ]
+    },
+    {
+      "code": "KNOWN_INTERSTITIAL",
+      "condition": {
+        "kind": "visible",
+        "target": "status_known_interstitial",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "recover",
+      "recovery": [
+        {
+          "id": "dismiss_known_interstitial",
+          "preconditions": [],
+          "postconditions": [],
+          "action": "click",
+          "target": "known_continue"
+        }
+      ]
+    },
+    {
+      "code": "UNEXPECTED_DIALOG",
+      "condition": {
+        "kind": "visible",
+        "target": "status_unexpected_dialog",
+        "value": null,
+        "variable": null,
+        "conditions": []
+      },
+      "response": "intervention",
+      "recovery": []
+    }
+  ],
+  "success": [
+    {
+      "kind": "visible",
+      "target": "transfer_heading",
+      "value": null,
+      "variable": null,
+      "conditions": []
+    }
+  ]
+}

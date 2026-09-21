@@ -162,11 +162,18 @@ class ReplayEngine:
                     }
                     and await self.assist.try_recover(step, capability, inputs, self.variables)
                 ):
-                    if step.postconditions and await self.conditions(
-                        step.postconditions, capability, inputs
-                    ):
-                        self.evidence.event("step_completed_by_assist", step_id=step.id)
-                        return
+                    # Give the UI a moment after the assist click, then accept the step if
+                    # postconditions are already satisfied (do not re-require drifted preconditions).
+                    deadline = time.monotonic() + min(3.0, self.config.execution.action_timeout_seconds)
+                    while True:
+                        if not step.postconditions or await self.conditions(
+                            step.postconditions, capability, inputs
+                        ):
+                            self.evidence.event("step_completed_by_assist", step_id=step.id)
+                            return
+                        if time.monotonic() >= deadline:
+                            break
+                        await asyncio.sleep(0.1)
                     continue
                 snapshot = self.evidence.snapshot(await self.surface.capture_sanitized_evidence())
                 self.evidence.event("action_blocked", step_id=step.id, code=code, evidence=snapshot)

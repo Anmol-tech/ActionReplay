@@ -9,7 +9,7 @@ ASSIST_SYSTEM = """You are assisting a FAILED deterministic replay of a bank UI 
 Take exactly ONE policy-safe action to unblock the current step. Do not finish.
 Do not click irreversible confirms (Confirm transfer, Confirm create, Confirm delete, Confirm creation).
 Use only the perform tool with kind=action. Targets must be current observation e-refs.
-Prefer clicking a visibly equivalent control when a label drifted.
+Prefer clicking a visibly equivalent control when a label drifted (e.g. Continue to review instead of Review transfer).
 """
 
 
@@ -75,12 +75,26 @@ class AssistedFallback:
                 raise AutomationError("ASSIST_REQUIRES_ACTION")
             assist_step = decision.step
             assist_step.id = f"assist_{step.id}_{self.used}"
-            await self.surface.execute_action(assist_step, capability.targets, inputs, variables)
+            # Model returns observation e-refs; map them into temporary durable targets.
+            targets = dict(capability.targets)
+            target_ref = getattr(assist_step, "target", None)
+            if isinstance(target_ref, str) and target_ref.startswith("e"):
+                if target_ref not in self.surface.refs:
+                    raise AutomationError("UNKNOWN_OBSERVATION_REFERENCE")
+                targets[target_ref] = self.surface.refs[target_ref]
+            if getattr(assist_step, "condition", None) is not None:
+                cond_target = getattr(assist_step.condition, "target", None)
+                if isinstance(cond_target, str) and cond_target.startswith("e"):
+                    if cond_target not in self.surface.refs:
+                        raise AutomationError("UNKNOWN_OBSERVATION_REFERENCE")
+                    targets[cond_target] = self.surface.refs[cond_target]
+            await self.surface.execute_action(assist_step, targets, inputs, variables)
             self.evidence.event(
                 "assisted_fallback_action",
                 step_id=step.id,
                 assist_step_id=assist_step.id,
                 action=assist_step.action,
+                target_ref=target_ref,
             )
             return True
         except Exception as exc:
@@ -88,6 +102,7 @@ class AssistedFallback:
                 "assisted_fallback_failed",
                 step_id=step.id,
                 code=getattr(exc, "code", type(exc).__name__),
+                error=str(exc)[:200],
             )
             return False
 

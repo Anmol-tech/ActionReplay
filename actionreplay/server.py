@@ -197,29 +197,68 @@ FIXTURE_CAPABILITIES = {
 
 
 def list_capability_catalog():
+    """Agent-facing catalog: callable capability ids with typed contracts from latest revision."""
     catalog = []
     if CAPABILITY_ROOT.is_dir():
         for folder in sorted(CAPABILITY_ROOT.iterdir()):
             if not folder.is_dir() or not folder.name.replace("-", "").isalnum() or not folder.name[0].islower():
                 continue
             revisions = sorted(int(path.stem) for path in folder.glob("*.json") if path.stem.isdigit())
-            if revisions:
-                catalog.append(
+            if not revisions:
+                continue
+            latest = revisions[-1]
+            entry = {
+                "capability_id": folder.name,
+                "revisions": revisions,
+                "latest_revision": latest,
+                "kind": "recorded",
+                "invoke": f"POST /runs with mode=replay, capability_name={folder.name}",
+            }
+            try:
+                artifact = Capability.model_validate_json((folder / f"{latest}.json").read_text())
+                entry.update(
                     {
-                        "capability_id": folder.name,
-                        "revisions": revisions,
-                        "kind": "recorded",
+                        "description": artifact.description,
+                        "inputs": {
+                            name: {"type": contract.type, "required": contract.required}
+                            for name, contract in artifact.inputs.items()
+                        },
+                        "outputs": {
+                            name: {"type": contract.type, "variable": contract.variable}
+                            for name, contract in artifact.outputs.items()
+                        },
                     }
                 )
+            except Exception:
+                pass
+            catalog.append(entry)
     for capability_id, path in sorted(FIXTURE_CAPABILITIES.items()):
         if path.is_file():
-            catalog.append(
-                {
-                    "capability_id": capability_id,
-                    "revisions": [1],
-                    "kind": "fixture",
-                }
-            )
+            entry = {
+                "capability_id": capability_id,
+                "revisions": [1],
+                "latest_revision": 1,
+                "kind": "fixture",
+                "invoke": f"POST /runs with mode=replay, capability_name={capability_id}",
+            }
+            try:
+                artifact = Capability.model_validate_json(path.read_text())
+                entry.update(
+                    {
+                        "description": artifact.description,
+                        "inputs": {
+                            name: {"type": contract.type, "required": contract.required}
+                            for name, contract in artifact.inputs.items()
+                        },
+                        "outputs": {
+                            name: {"type": contract.type, "variable": contract.variable}
+                            for name, contract in artifact.outputs.items()
+                        },
+                    }
+                )
+            except Exception:
+                pass
+            catalog.append(entry)
     return catalog
 
 
