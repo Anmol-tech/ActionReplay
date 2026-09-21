@@ -54,7 +54,8 @@ class Coordinator:
             raise HTTPException(409, "A run is already active")
         if request.mode == "replay":
             if request.artifact is None:
-                raise HTTPException(422, "Replay requires an artifact")
+                # Agent-facing path: catalog id + typed inputs (no embedded artifact body).
+                request.artifact = load_latest_capability(request.capability_name)
             try:
                 request.artifact.validate_inputs(request.inputs)
             except ValueError:
@@ -212,7 +213,7 @@ def list_capability_catalog():
                 "revisions": revisions,
                 "latest_revision": latest,
                 "kind": "recorded",
-                "invoke": f"POST /runs with mode=replay, capability_name={folder.name}",
+                "invoke": f"POST /runs with mode=replay, capability_name={folder.name}, inputs={{...}}",
             }
             try:
                 artifact = Capability.model_validate_json((folder / f"{latest}.json").read_text())
@@ -239,7 +240,7 @@ def list_capability_catalog():
                 "revisions": [1],
                 "latest_revision": 1,
                 "kind": "fixture",
-                "invoke": f"POST /runs with mode=replay, capability_name={capability_id}",
+                "invoke": f"POST /runs with mode=replay, capability_name={capability_id}, inputs={{...}}",
             }
             try:
                 artifact = Capability.model_validate_json(path.read_text())
@@ -280,6 +281,14 @@ def load_capability_artifact(capability_id: str, revision: int) -> Capability:
         return Capability.model_validate_json(path.read_text())
     except Exception as exc:
         raise HTTPException(422, "Invalid capability artifact") from exc
+
+
+def load_latest_capability(capability_id: str) -> Capability:
+    """Resolve catalog id → latest revision artifact (agent invoke without embedding JSON)."""
+    for entry in list_capability_catalog():
+        if entry["capability_id"] == capability_id:
+            return load_capability_artifact(capability_id, entry["latest_revision"])
+    raise HTTPException(404, "Unknown capability")
 
 
 def create_app(config: Config):

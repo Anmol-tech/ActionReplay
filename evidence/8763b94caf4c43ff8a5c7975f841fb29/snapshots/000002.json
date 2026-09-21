@@ -1,0 +1,55 @@
+{
+  "frames": [
+    {
+      "route": "/create-review",
+      "controls": [
+        {
+          "tag": "h2",
+          "label": "[REDACTED]",
+          "text": "Create member review"
+        },
+        {
+          "tag": "td",
+          "label": "[REDACTED]",
+          "text": "New member ID"
+        },
+        {
+          "tag": "td",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        },
+        {
+          "tag": "output",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        },
+        {
+          "tag": "td",
+          "label": "[REDACTED]",
+          "text": "Display name"
+        },
+        {
+          "tag": "td",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        },
+        {
+          "tag": "output",
+          "label": "[REDACTED]",
+          "text": "[REDACTED]"
+        },
+        {
+          "tag": "button",
+          "label": "[REDACTED]",
+          "text": "Confirm create"
+        },
+        {
+          "tag": "a",
+          "label": "[REDACTED]",
+          "text": "Back"
+        }
+      ]
+    }
+  ],
+  "native_dialog": false
+}

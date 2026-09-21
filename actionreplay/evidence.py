@@ -199,9 +199,104 @@ def save_revision(root: Path, capability: Capability):
     return path
 
 
+def write_evidence_index(destination: Path):
+    """Curated index: look-here-first primary runs, then stretch, then archive."""
+    primary_path = destination / "primary.json"
+    primary = {}
+    if primary_path.is_file():
+        primary = json.loads(primary_path.read_text())
+
+    def row(run_id: str, note: str | None = None) -> str | None:
+        manifest_path = destination / run_id / "manifest.json"
+        if not manifest_path.is_file():
+            return None
+        m = json.loads(manifest_path.read_text())
+        result = json.loads((destination / run_id / "result.json").read_text())
+        stretch = m.get("stretch")
+        stretch_bit = f", stretch `{stretch}`" if stretch else ""
+        note_bit = f" — {note}" if note else ""
+        extras = []
+        events = destination / run_id / "events.jsonl"
+        cap = destination / run_id / "capability.json"
+        video = destination / run_id / "confirm-handoff.webm"
+        if events.is_file():
+            extras.append(f"[Events]({run_id}/events.jsonl)")
+        if cap.is_file():
+            extras.append(f"[capability]({run_id}/capability.json)")
+        if video.is_file():
+            extras.append(f"[video]({run_id}/confirm-handoff.webm)")
+        return (
+            f"- [{run_id}]({run_id}/manifest.json) — {m['mode']}, {m['provenance']}, "
+            f"scenario `{m.get('scenario', 'default')}`{stretch_bit}, result `{result['code']}`"
+            f"{note_bit}. " + ", ".join(extras) + "."
+        )
+
+    look = []
+    labels = [
+        ("live_discovery", "current-mock live discovery"),
+        ("live_replay_ok", "alternate-input replay"),
+        ("live_replay_not_found", "MEMBER_NOT_FOUND business outcome"),
+    ]
+    for key, label in labels:
+        rid = primary.get(key)
+        if rid:
+            line = row(rid, label)
+            if line:
+                look.append(line)
+
+    stretch = []
+    assist = primary.get("assisted_fallback")
+    if assist:
+        line = row(assist, "one policy-checked assist click on label drift")
+        if line:
+            stretch.append(line)
+    handoff = primary.get("confirm_handoff")
+    if handoff:
+        line = row(handoff, "Confirm* Take Control → click Confirm → Resume (same session)")
+        if line:
+            stretch.append(line)
+    stability = primary.get("stability_report")
+    if stability and (destination / stability).is_file():
+        stretch.append(
+            f"- [{stability}]({stability}) — stretch multi-run stability: N deterministic "
+            "replays of savings-balance with pass rate."
+        )
+
+    primary_ids = {primary.get(k) for k in ("live_discovery", "live_replay_ok", "live_replay_not_found", "assisted_fallback", "confirm_handoff")}
+    archive = []
+    for path in sorted(destination.glob("*/manifest.json")):
+        rid = path.parent.name
+        if rid in primary_ids:
+            continue
+        line = row(rid)
+        if line:
+            archive.append(line)
+
+    lines = [
+        "# Evidence index",
+        "",
+        "Provenance is explicit. Offline fixtures are not genuine discovery evidence.",
+        "",
+        "## Look here first (current LegacyBank mock)",
+        "",
+        *look,
+        "",
+        "## Stretch demos",
+        "",
+        *(stretch or ["- _(none yet)_"]),
+        "",
+        "## Archive / offline fixtures",
+        "",
+        *archive,
+        "",
+    ]
+    (destination / "index.md").write_text("\n".join(lines))
+
+
 def export_runs(root: Path, destination: Path, run_ids: list[str], sensitive=()):
     sanitizer = Sanitizer(sensitive)
     manifests = []
+    text_suffixes = {".json", ".jsonl", ".md", ".txt", ".yaml", ".yml"}
     for run_id in run_ids:
         if not re.fullmatch(r"[a-f0-9]{32}", run_id):
             raise ValueError("Invalid run ID")
@@ -212,7 +307,7 @@ def export_runs(root: Path, destination: Path, run_ids: list[str], sensitive=())
         for path in folder.rglob("*"):
             if path.is_symlink():
                 raise ValueError("Symlink in evidence")
-            if path.is_file():
+            if path.is_file() and path.suffix.lower() in text_suffixes:
                 content = path.read_text()
                 if sanitizer.text(content) != content:
                     raise ValueError("Export scan detected sensitive content")
@@ -220,22 +315,7 @@ def export_runs(root: Path, destination: Path, run_ids: list[str], sensitive=())
     destination.mkdir(parents=True, exist_ok=True)
     for manifest in manifests:
         shutil.copytree(root / manifest["run_id"], destination / manifest["run_id"], dirs_exist_ok=True)
-    rows = [
-        "# Evidence index",
-        "",
-        "Provenance is explicit. Offline fixtures are not genuine discovery evidence.",
-        "",
-    ]
-    for path in sorted(destination.glob("*/manifest.json")):
-        m = json.loads(path.read_text())
-        result = json.loads((path.parent / "result.json").read_text())
-        rows.append(
-            f"- [{m['run_id']}]({m['run_id']}/manifest.json) — {m['mode']}, "
-            f"{m['provenance']}, scenario `{m.get('scenario', 'default')}`, "
-            f"result `{result['code']}`. "
-            f"[Events]({m['run_id']}/events.jsonl), [capability]({m['run_id']}/capability.json)."
-        )
-    (destination / "index.md").write_text("\n".join(rows) + "\n")
+    write_evidence_index(destination)
 
 
 def cleanup(root: Path, retention_days: int):

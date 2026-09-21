@@ -4,7 +4,7 @@ Discover a UI workflow with an LLM, save a typed capability, and replay it witho
 
 ## Reviewer path (start here)
 
-1. **Live evidence** — Open [`evidence/index.md`](evidence/index.md). Prefer the current-mock trio: live discovery `OK`, alternate-input replay `OK`, and `MEMBER_NOT_FOUND`. Also see the assisted-fallback drift run when present.
+1. **Live evidence** — Open [`evidence/index.md`](evidence/index.md). Start at **Look here first** (live discovery / alternate replay / `MEMBER_NOT_FOUND`). Stretch: assisted fallback, Confirm* handoff video, multi-run stability.
 2. **Design write-up** — [`REPORT.md`](REPORT.md) (seven required headings).
 3. **Run locally** (no model key needed for replay):
 
@@ -139,7 +139,28 @@ See `/evidence/index.md` for the exported assist run.
 
 ### Agent-facing capability catalog
 
-`GET http://127.0.0.1:8001/capabilities` returns recorded/fixture capabilities with latest revision, typed inputs/outputs, and how to invoke via `POST /runs` (`mode=replay`). This is a thin catalog for a calling agent—not a remote multi-tenant marketplace.
+`GET http://127.0.0.1:8001/capabilities` returns recorded/fixture capabilities with latest revision, typed inputs/outputs, and how to invoke. An agent can call by name without embedding the artifact JSON:
+
+```bash
+uv run actionreplay serve   # leave running
+# List:
+curl -s http://127.0.0.1:8001/capabilities | python -m json.tool
+# Invoke latest offline-balance with typed args:
+curl -s -X POST http://127.0.0.1:8001/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"mode":"replay","capability_name":"offline-balance","inputs":{"member_id":"00678"}}'
+# Or the scripted demo:
+uv run python scripts/demo_catalog_invoke.py
+```
+
+This is a thin catalog for a calling agent—not a remote multi-tenant marketplace.
+
+### Confirm* handoff video + multi-run stability
+
+```bash
+uv run python scripts/record_confirm_handoff.py   # Take Control → Confirm create → Resume (+ .webm)
+uv run python scripts/stability_report.py        # N deterministic replays → evidence/stability.md
+```
 
 ## Run without live services
 

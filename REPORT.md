@@ -4,7 +4,7 @@ ActionReplay separates probabilistic discovery from deterministic execution. A P
 
 Discovery sends screenshots and rendered control descriptions to OpenRouter. It exposes a finite set of UI actions, not application business APIs, source code, network response bodies, hidden inputs, or arbitrary code execution. Observation references are temporary. The recorder resolves them into durable targeting descriptions and records successfully executed actions, parameter bindings, and verified checkpoints. Page text is untrusted data. A separate replay module imports no model client. Structured decision-only models (e.g. TypeSafe Jev) are intentionally not used for discovery: they lack image+tool computer-use loops.
 
-A genuine OpenRouter discovery run against the live mock UI is checked in under `/evidence/` (provenance `live`), along with alternate-input replay, a `MEMBER_NOT_FOUND` business-outcome replay, and an assisted-fallback drift recovery run. Offline scripted-model evidence remains for handoff/transient demos that do not require a provider call.
+A genuine OpenRouter discovery run against the live mock UI is checked in under `/evidence/` (provenance `live`), along with alternate-input replay, a `MEMBER_NOT_FOUND` business-outcome replay, an assisted-fallback drift recovery run, a Confirm* same-session handoff video, and a multi-run stability report. Offline scripted-model evidence remains for older handoff/transient demos that do not require a provider call. Start at the **Look here first** section in `evidence/index.md`.
 
 # Artifact schema
 
@@ -48,6 +48,6 @@ Limits: screenshots sent to the model can contain visible data, so the current w
 
 # Cuts
 
-Deferred: remote streaming, desktop/visual implementations, distributed workers, full tenant plumbing, polished multi-user UI, automatic artifact repair, confidence/approval promotion, multi-run flakiness dashboards, and production identity/PII systems. Stretch **assisted fallback** is implemented (off by default) with checked-in drift evidence. A thin local capability catalog exists at `GET /capabilities`; a networked agent marketplace is not. Screen recording is optional and left to the author. The submission email must be sent by the author (see `SUBMISSION.md`).
+Deferred: remote streaming, desktop/visual implementations, distributed workers, full tenant plumbing, polished multi-user UI, automatic artifact repair, confidence/approval promotion, multi-run flakiness dashboards as a product, and production identity/PII systems. Stretch items that *are* implemented: **assisted fallback** (checked-in drift evidence), thin **agent catalog** (`GET /capabilities` + `POST /runs` by `capability_name`), **Confirm\* handoff video**, and a **multi-run stability** report under `/evidence/`. A networked agent marketplace is not. Screen recording of the full product UI is optional; the Confirm handoff `.webm` covers the critical control-transfer path. The submission email must be sent by the author (see `SUBMISSION.md`).
 
-Next concrete steps: (1) multi-run stability report for the savings-balance artifact, (2) one reviewed label/route variant as a stand-in for a second tenant, then (3) draft→approved gating only after those pass.
+Next concrete steps: (1) draft→approved gating only after stability stays green across more input sets, (2) one reviewed label/route variant as a stand-in for a second tenant, then (3) richer operator UX.

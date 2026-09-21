@@ -7,6 +7,7 @@ import base64
 import json
 import re
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Protocol
 from urllib.parse import urlsplit
 
@@ -85,12 +86,15 @@ class BrowserSurface:
         self.dialog = None
         self.pw = self.browser = self.context = self.page = None
 
-    async def start(self):
+    async def start(self, record_video_dir: Path | None = None):
         self.pw = await async_playwright().start()
         self.browser = await self.pw.chromium.launch(headless=self.config.headless)
-        self.context = await self.browser.new_context(
-            viewport={"width": 1200, "height": 1000}, service_workers="block"
-        )
+        context_kwargs = {"viewport": {"width": 1200, "height": 1000}, "service_workers": "block"}
+        if record_video_dir is not None:
+            record_video_dir.mkdir(parents=True, exist_ok=True)
+            context_kwargs["record_video_dir"] = str(record_video_dir)
+            context_kwargs["record_video_size"] = {"width": 1200, "height": 1000}
+        self.context = await self.browser.new_context(**context_kwargs)
         self.context.set_default_timeout(self.config.execution.action_timeout_seconds * 1000)
         await self.context.route("**/*", self._request)
         await self.context.expose_binding("__arHuman", self._human)
